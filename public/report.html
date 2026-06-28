@@ -662,15 +662,53 @@ Signature: HMAC-SHA256(base64(header) + "." + base64(payload), JWT_SECRET)</div>
 
 
   <!-- ═══════════════════════════════════════════════════════ -->
-  <!-- PAGE 6 — TESTING, RESULTS & CONCLUSION                 -->
+  <!-- PAGE 6 — SYSTEM USER INTERFACE SHOWCASE                 -->
   <!-- ═══════════════════════════════════════════════════════ -->
   <div class="page">
     <div class="page-header">
       <div class="chapter">Chapter 5</div>
+      <h2>System User Interface &amp; Dashboard Showcase</h2>
+    </div>
+
+    <h3>5.1 Main Security Command Center Interface</h3>
+    <p>
+      The interface below showcases the production-ready glassmorphic dashboard designed for AuthGuard-MFA. The UI is built using high-performance modern web standards, adhering to responsive design grids.
+    </p>
+
+    <div style="text-align: center; margin: 1.5rem 0;">
+      <img src="was_mini_dashboard.png" alt="AuthGuard-MFA Security Command Center Dashboard" style="width: 100%; max-height: 120mm; border: 2px solid var(--primary); border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.15);">
+      <p style="font-style: italic; font-size: 10pt; color: var(--gray); margin-top: 0.5rem; text-align: center;">
+        Figure 5.1: Main Zero-Trust Dashboard showing live clock, user greeting, compliance metrics, virtual network mapping, live log telemetry stream, and JWT playground.
+      </p>
+    </div>
+
+    <h3>5.2 Design Strategy &amp; Usability</h3>
+    <p>
+      The design follows a premium dark-mode theme utilizing a glassmorphism aesthetic (defined by high transparency, light borders, and background blurs). This design is highly functional for security centers where alert visual saliency is critical:
+    </p>
+    <ul>
+      <li><strong>Cognitive Load Reduction:</strong> The clean grid separation lets security analysts isolate telemetry data, network health, and user claims instantly.</li>
+      <li><strong>Compliance Visualizer:</strong> Color-coded compliance indicators (PASS/WARN) are mapped dynamically from current security states.</li>
+      <li><strong>Interactive Sandbox:</strong> Allows immediate token tampering to audit cryptographic checks.</li>
+    </ul>
+
+    <div class="pg-footer">
+      <span>AuthGuard-MFA | CSE (Cyber Security) — WAS Mini Project</span>
+      <span>Page 6</span>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- PAGE 7 — TESTING, RESULTS & CONCLUSION                 -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div class="page">
+    <div class="page-header">
+      <div class="chapter">Chapter 6</div>
       <h2>Testing, Results &amp; Conclusion</h2>
     </div>
 
-    <h3>5.1 Security Testing Results</h3>
+    <h3>6.1 Security Testing Results</h3>
     <table class="data-table">
       <thead>
         <tr><th>Test Case</th><th>Attack / Scenario</th><th>Expected Result</th><th>Actual Result</th></tr>
@@ -727,7 +765,7 @@ Signature: HMAC-SHA256(base64(header) + "." + base64(payload), JWT_SECRET)</div>
       </tbody>
     </table>
 
-    <h3>5.2 Compliance Summary</h3>
+    <h3>6.2 Compliance Summary</h3>
     <table class="data-table">
       <thead>
         <tr><th>Framework</th><th>Controls Addressed</th><th>Score</th></tr>
@@ -740,7 +778,7 @@ Signature: HMAC-SHA256(base64(header) + "." + base64(payload), JWT_SECRET)</div>
       </tbody>
     </table>
 
-    <h3>5.3 Conclusion</h3>
+    <h3>6.3 Conclusion</h3>
     <p>
       <strong>AuthGuard-MFA</strong> successfully demonstrates a production-ready, security-by-design web application that integrates multiple industry-standard security controls into a cohesive, functional system. The project bridges theoretical knowledge of CIS Benchmarks, OWASP standards, and Zero-Trust Architecture with practical, working implementation.
     </p>
@@ -751,7 +789,7 @@ Signature: HMAC-SHA256(base64(header) + "." + base64(payload), JWT_SECRET)</div>
       Future scope includes integration of a Redis-backed persistent rate limiter, OAuth 2.0 / SAML SSO support, real AWS CloudWatch SIEM integration, and container orchestration via Kubernetes with Network Policies for true Zero-Trust microsegmentation.
     </p>
 
-    <h3>5.4 References</h3>
+    <h3>6.4 References</h3>
     <ol style="font-size: 10pt;">
       <li>CIS Controls v8 — Center for Internet Security, 2021. <em>https://www.cisecurity.org/controls/</em></li>
       <li>OWASP Top 10:2021 — Open Web Application Security Project. <em>https://owasp.org/Top10/</em></li>
@@ -772,9 +810,10 @@ Signature: HMAC-SHA256(base64(header) + "." + base64(payload), JWT_SECRET)</div>
 
     <div class="pg-footer">
       <span>AuthGuard-MFA | CSE (Cyber Security) — WAS Mini Project</span>
-      <span>Page 6</span>
+      <span>Page 7</span>
     </div>
   </div>
+
 
 </div><!-- end page-wrapper -->
 
