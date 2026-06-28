@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AuthGuard-MFA — Project Report | CSE (Cyber Security)</title>
   <link href="https://fonts.googleapis.com/css2?family=Times+New+Roman&family=Arial:wght@400;600;700&display=swap" rel="stylesheet">
-  <!-- html2pdf library allowed by helmet CSP -->
-  <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
+  <!-- html2pdf library loaded locally to guarantee CSP compatibility -->
+  <script src="js/html2pdf.bundle.min.js"></script>
   <style>
     /* ── Screen UI Styles ─────────────────────────────────────────────── */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -311,10 +311,10 @@
       <p>Computer Science Engineering (Cyber Security) • Thakur College of Engineering and Technology</p>
     </div>
     <div style="display: flex; gap: 0.75rem;">
-      <button class="btn-print" onclick="downloadDirectPDF()" style="font-size: 1rem; padding: 0.8rem 2rem; background: linear-gradient(135deg, #a855f7, #7928ca); color: #fff; border: 1px solid rgba(168,85,247,0.5);">
+      <button class="btn-print" onclick="downloadDirectPDF()" style="cursor: pointer !important; font-size: 1rem; padding: 0.8rem 2rem; background: linear-gradient(135deg, #a855f7, #7928ca); color: #fff; border: 1px solid rgba(168,85,247,0.5);">
         📥 Direct PDF Download (Instant)
       </button>
-      <button class="btn-print" onclick="window.print()" style="font-size: 1rem; padding: 0.8rem 2rem; background: linear-gradient(135deg, #00ffcc, #00e5ff); animation: pulse 2s infinite;">
+      <button class="btn-print" onclick="window.print()" style="cursor: pointer !important; font-size: 1rem; padding: 0.8rem 2rem; background: linear-gradient(135deg, #00ffcc, #00e5ff); animation: pulse 2s infinite;">
         🖨️ Open Print Dialog
       </button>
     </div>
