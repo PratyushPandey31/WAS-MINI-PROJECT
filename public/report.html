@@ -311,7 +311,7 @@
       <p>Computer Science Engineering (Cyber Security) • Thakur College of Engineering and Technology</p>
     </div>
     <div style="display: flex; gap: 0.75rem;">
-      <button class="btn-print" onclick="downloadDirectPDF()" style="cursor: pointer !important; font-size: 1rem; padding: 0.8rem 2rem; background: linear-gradient(135deg, #a855f7, #7928ca); color: #fff; border: 1px solid rgba(168,85,247,0.5);">
+      <button class="btn-print" onclick="downloadDirectPDF(this)" style="cursor: pointer !important; font-size: 1rem; padding: 0.8rem 2rem; background: linear-gradient(135deg, #a855f7, #7928ca); color: #fff; border: 1px solid rgba(168,85,247,0.5);">
         📥 Direct PDF Download (Instant)
       </button>
       <button class="btn-print" onclick="window.print()" style="cursor: pointer !important; font-size: 1rem; padding: 0.8rem 2rem; background: linear-gradient(135deg, #00ffcc, #00e5ff); animation: pulse 2s infinite;">
@@ -832,9 +832,10 @@ Signature: HMAC-SHA256(base64(header) + "." + base64(payload), JWT_SECRET)</div>
   if (dateEl) dateEl.innerText = d.toLocaleDateString('en-IN', opts);
 
   // Direct PDF Download Handler
-  function downloadDirectPDF() {
-    // Show a temporary loading alert or indicator
-    const btn = document.querySelector('button[onclick="downloadDirectPDF()"]');
+  function downloadDirectPDF(btn) {
+    if (!btn) {
+      btn = document.querySelector('button');
+    }
     const originalText = btn.innerHTML;
     btn.innerHTML = '⏳ Generating PDF...';
     btn.disabled = true;
