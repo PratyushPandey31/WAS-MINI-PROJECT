@@ -302,15 +302,30 @@
 <body>
 
 <!-- ── SCREEN TOOLBAR ──────────────────────────────────────────────────── -->
-<div class="screen-bar">
-  <div>
-    <h1>🔐 AuthGuard-MFA — HOD Report</h1>
-    <p>Computer Science Engineering (Cyber Security) · WAS Capstone Project</p>
+<div class="screen-bar" style="flex-direction: column; gap: 0.75rem; align-items: stretch; padding: 1.25rem 2rem;">
+  <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+    <div>
+      <h1 style="font-size: 1.25rem;">🔐 AuthGuard-MFA — HOD Academic Report</h1>
+      <p>Computer Science Engineering (Cyber Security) • Thakur College of Engineering and Technology</p>
+    </div>
+    <button class="btn-print" onclick="window.print()" style="font-size: 1rem; padding: 0.8rem 2.5rem; background: linear-gradient(135deg, #00ffcc, #00e5ff); animation: pulse 2s infinite;">
+      🖨️ Open Print / PDF Dialog
+    </button>
   </div>
-  <button class="btn-print" onclick="window.print()">
-    🖨️ Download / Print as PDF
-  </button>
+  
+  <div style="background: rgba(255,255,255,0.1); border-left: 4px solid #00ffcc; padding: 0.5rem 1rem; border-radius: 4px; font-family: 'Inter', sans-serif; font-size: 0.85rem; color: #fff; display: flex; align-items: center; gap: 0.5rem; justify-content: space-between;">
+    <span><strong>💡 Step to Download PDF:</strong> Click the button above ➔ In the Print popup, select Destination as <strong>"Save as PDF"</strong> (or Microsoft Print to PDF) ➔ Click <strong>Save</strong>.</span>
+    <span style="font-size: 0.75rem; opacity: 0.8;">[Margins: Default • Background graphics: Enabled]</span>
+  </div>
 </div>
+<style>
+  @keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.03); box-shadow: 0 0 15px rgba(0,255,204,0.6); }
+    100% { transform: scale(1); }
+  }
+</style>
+
 
 <div class="page-wrapper">
 
