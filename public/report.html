@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AuthGuard-MFA — Project Report | CSE (Cyber Security)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Times+New+Roman&family=Arial:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ── Screen UI Styles ─────────────────────────────────────────────── */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+    :root {
+      --primary: #1a237e;
+      --accent:  #0d47a1;
+      --green:   #1b5e20;
+      --red:     #b71c1c;
+      --gray:    #37474f;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Times New Roman', Times, serif;
+      background: #f4f4f4;
+      color: #111;
+      font-size: 12pt;
+      line-height: 1.7;
+    }
+
+    /* Screen-only toolbar */
+    .screen-bar {
+      background: linear-gradient(135deg, #1a237e, #0d47a1);
+      color: #fff;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 999;
+      box-shadow: 0 2px 15px rgba(0,0,0,0.3);
+    }
+    .screen-bar h1 { font-family: 'Inter', sans-serif; font-size: 1.1rem; font-weight: 700; }
+    .screen-bar p  { font-family: 'Inter', sans-serif; font-size: 0.8rem; opacity: 0.8; }
+
+    .btn-print {
+      background: linear-gradient(135deg, #00ffcc, #00e5ff);
+      color: #0a0f1e;
+      border: none;
+      padding: 0.65rem 2rem;
+      border-radius: 8px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.3s;
+      text-decoration: none;
+    }
+    .btn-print:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(0,255,204,0.4); }
+
+    /* ── A4 Page Layout ─────────────────────────────────────────────── */
+    .page-wrapper {
+      max-width: 210mm;
+      margin: 2rem auto;
+      background: #fff;
+      box-shadow: 0 0 30px rgba(0,0,0,0.15);
+    }
+
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 20mm 22mm 20mm 30mm; /* L margin bigger = binding */
+      border-bottom: 3px dashed #ddd;
+      page-break-after: always;
+      position: relative;
+    }
+    .page:last-child { border-bottom: none; }
+
+    /* ── Cover Page ─────────────────────────────────────────────────── */
+    .cover {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      text-align: center;
+      padding: 15mm 22mm;
+    }
+
+    .cover .logo-row {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      margin-bottom: 0.75rem;
+    }
+    .cover .logo-shield {
+      width: 70px;
+      height: 70px;
+      background: linear-gradient(135deg, #1a237e, #0d47a1);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      color: #fff;
+    }
+    .cover .uni-name  { font-size: 15pt; font-weight: bold; color: var(--primary); line-height: 1.3; }
+    .cover .dept      { font-size: 11pt; color: var(--gray); margin-top: 0.25rem; }
+
+    .cover .divider {
+      width: 80%;
+      border: none;
+      border-top: 2.5px solid var(--primary);
+      margin: 1rem 0;
+    }
+
+    .cover .report-badge {
+      background: var(--primary);
+      color: #fff;
+      padding: 0.3rem 1.5rem;
+      border-radius: 20px;
+      font-size: 9pt;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 1.25rem;
+    }
+
+    .cover .project-title {
+      font-size: 22pt;
+      font-weight: bold;
+      color: var(--primary);
+      line-height: 1.3;
+      margin-bottom: 0.5rem;
+    }
+
+    .cover .project-subtitle {
+      font-size: 13pt;
+      color: var(--gray);
+      margin-bottom: 2rem;
+    }
+
+    .cover .info-box {
+      width: 90%;
+      border: 2px solid var(--primary);
+      border-radius: 8px;
+      padding: 1.25rem 2rem;
+      text-align: left;
+      margin-bottom: 2rem;
+    }
+    .cover .info-row {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 0.5rem;
+      font-size: 11pt;
+    }
+    .cover .info-label { font-weight: bold; color: var(--primary); min-width: 130px; }
+    .cover .info-val   { color: #222; }
+
+    .cover .supervisor-box {
+      width: 90%;
+      background: #e8eaf6;
+      border-left: 5px solid var(--primary);
+      padding: 1rem 1.5rem;
+      text-align: left;
+      font-size: 11pt;
+    }
+
+    .cover .footer-year {
+      margin-top: auto;
+      padding-top: 2rem;
+      font-size: 10pt;
+      color: var(--gray);
+      border-top: 1px solid #ccc;
+      width: 80%;
+      text-align: center;
+    }
+
+    /* ── Generic Page Styles ─────────────────────────────────────────── */
+    .page-header {
+      border-bottom: 2px solid var(--primary);
+      padding-bottom: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .page-header .chapter { font-size: 9pt; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; }
+    .page-header h2 { font-size: 16pt; color: var(--primary); }
+
+    h3 { font-size: 13pt; color: var(--primary); margin: 1.25rem 0 0.5rem; border-bottom: 1px solid #c5cae9; padding-bottom: 0.3rem; }
+    h4 { font-size: 11pt; color: var(--accent); margin: 1rem 0 0.4rem; }
+
+    p { margin-bottom: 0.75rem; text-align: justify; }
+
+    ul, ol { margin: 0.5rem 0 0.75rem 1.5rem; }
+    li { margin-bottom: 0.3rem; }
+
+    /* ── Table ─────────────────────────────────────────────────────── */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10.5pt;
+      margin: 1rem 0;
+    }
+    .data-table th {
+      background: var(--primary);
+      color: #fff;
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+      font-size: 10pt;
+    }
+    .data-table td {
+      padding: 0.45rem 0.75rem;
+      border: 1px solid #c5cae9;
+    }
+    .data-table tr:nth-child(even) td { background: #e8eaf6; }
+    .pass { color: var(--green); font-weight: bold; }
+    .warn { color: var(--red); font-weight: bold; }
+
+    /* ── Code Block ─────────────────────────────────────────────────── */
+    .code-block {
+      background: #f5f5f5;
+      border-left: 4px solid var(--accent);
+      padding: 0.75rem 1rem;
+      font-family: 'Courier New', monospace;
+      font-size: 9.5pt;
+      margin: 0.75rem 0;
+      white-space: pre-wrap;
+      word-break: break-all;
+      line-height: 1.6;
+    }
+
+    /* ── Architecture Diagram ─────────────────────────────────────── */
+    .arch-diagram {
+      border: 2px solid var(--primary);
+      border-radius: 8px;
+      padding: 1rem;
+      background: #fafafa;
+      font-family: 'Courier New', monospace;
+      font-size: 9pt;
+      margin: 1rem 0;
+      line-height: 1.8;
+    }
+
+    /* ── Info / Note boxes ────────────────────────────────────────── */
+    .note-box {
+      background: #e3f2fd;
+      border-left: 4px solid #1976d2;
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      font-size: 10.5pt;
+    }
+    .warn-box {
+      background: #fff3e0;
+      border-left: 4px solid #f57c00;
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      font-size: 10.5pt;
+    }
+    .success-box {
+      background: #e8f5e9;
+      border-left: 4px solid #2e7d32;
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      font-size: 10.5pt;
+    }
+
+    /* ── Page Number Footer ─────────────────────────────────────── */
+    .pg-footer {
+      position: absolute;
+      bottom: 8mm;
+      left: 30mm;
+      right: 22mm;
+      display: flex;
+      justify-content: space-between;
+      font-size: 9pt;
+      color: #888;
+      border-top: 1px solid #ddd;
+      padding-top: 0.3rem;
+    }
+
+    /* ── Print Media Query ───────────────────────────────────────── */
+    @media print {
+      body { background: #fff; }
+      .screen-bar { display: none !important; }
+      .page-wrapper { margin: 0; box-shadow: none; }
+      .page {
+        width: 210mm;
+        min-height: 297mm;
+        padding: 20mm 22mm 20mm 30mm;
+        page-break-after: always;
+        border-bottom: none;
+      }
+      a { text-decoration: none; color: inherit; }
+    }
+
+    @page {
+      size: A4 portrait;
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── SCREEN TOOLBAR ──────────────────────────────────────────────────── -->
+<div class="screen-bar">
+  <div>
+    <h1>🔐 AuthGuard-MFA — HOD Report</h1>
+    <p>Computer Science Engineering (Cyber Security) · WAS Capstone Project</p>
+  </div>
+  <button class="btn-print" onclick="window.print()">
+    🖨️ Download / Print as PDF
+  </button>
+</div>
+
+<div class="page-wrapper">
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- PAGE 1 — COVER PAGE                                    -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div class="page cover">
+    <div class="logo-row">
+      <div class="logo-shield">🔐</div>
+      <div>
+        <div class="uni-name">INSTITUTE OF TECHNOLOGY &amp; SCIENCE</div>
+        <div class="dept">Department of Computer Science &amp; Engineering (Cyber Security)</div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="report-badge">Mini Project Report · Academic Year 2025–26</div>
+
+    <div class="project-title">AuthGuard-MFA</div>
+    <div class="project-subtitle">
+      A Zero-Trust Identity Portal &amp; Real-Time Security SIEM Console<br>
+      with Multi-Factor Authentication, CIS Benchmark Compliance &amp; Cloud Security Architecture
+    </div>
+
+    <div class="info-box">
+      <div class="info-row"><span class="info-label">Subject:</span><span class="info-val">Web Application Security (WAS) &amp; Cloud / Virtualization Security</span></div>
+      <div class="info-row"><span class="info-label">Branch:</span><span class="info-val">Computer Science Engineering (Cyber Security)</span></div>
+      <div class="info-row"><span class="info-label">Student Name:</span><span class="info-val">Pratyush Pandey</span></div>
+      <div class="info-row"><span class="info-label">Submitted To:</span><span class="info-val">Head of Department (HOD)</span></div>
+      <div class="info-row"><span class="info-label">Technology Stack:</span><span class="info-val">Node.js · Express.js · SQLite · JWT · bcrypt · TOTP · Helmet.js</span></div>
+      <div class="info-row"><span class="info-label">GitHub Repository:</span><span class="info-val">github.com/PratyushPandey31/WAS-MINI-PROJECT</span></div>
+      <div class="info-row"><span class="info-label">Date:</span><span class="info-val" id="cover-date">—</span></div>
+    </div>
+
+    <div class="supervisor-box">
+      <strong>Declaration:</strong> I hereby declare that this mini project titled <em>"AuthGuard-MFA"</em> is an original work developed independently as part of the Web Application Security (WAS) curriculum. All external references have been duly cited. This project has not been submitted elsewhere for any examination or award.
+      <br><br>
+      <strong>Signature:</strong> _______________________ &nbsp;&nbsp;&nbsp; <strong>Date:</strong> _____________________
+    </div>
+
+    <div class="footer-year">Academic Year 2025–2026 · Semester VI · Mini Project Submission</div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- PAGE 2 — ABSTRACT & OBJECTIVES                         -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div class="page">
+    <div class="page-header">
+      <div class="chapter">Chapter 1</div>
+      <h2>Abstract &amp; Project Objectives</h2>
+    </div>
+
+    <h3>1.1 Abstract</h3>
+    <p>
+      <strong>AuthGuard-MFA</strong> is a full-stack, production-grade Web Application Security capstone project that implements a <em>Zero-Trust Identity &amp; Access Management (IAM)</em> system integrated with a live Security Information and Event Management (SIEM) console. The system demonstrates comprehensive compliance with the <strong>CIS Security Benchmarks</strong>, <strong>OWASP Top 10</strong> vulnerability mitigations, and real-world <strong>Cloud / Virtualization Security</strong> architecture principles.
+    </p>
+    <p>
+      The project is built on Node.js with Express.js as the backend framework and a vanilla HTML5/CSS3 glassmorphic frontend. Core security primitives include HMAC-SHA256 signed JSON Web Tokens (JWT), bcrypt password hashing at work factor 12, Time-based One-Time Password (TOTP) Multi-Factor Authentication via the RFC 6238 standard, and HTTP Security Headers enforced through Helmet.js middleware.
+    </p>
+    <p>
+      The Audit SIEM Console provides real-time visibility into security events (AUTH_SUCCESS, AUTH_FAILED, BRUTE_FORCE_SUSPECTED) streamed from the SQLite event log. Role-Based Access Control (RBAC) governs data visibility across three access tiers: Administrator, Security Operations (SecOps), and Guest. A suite of interactive exploit simulators — including Brute-Force Attack, XSS Sanitization, JWT Tampering, and Session Cookie Auditor — allows live demonstration of attack vectors and corresponding defensive countermeasures.
+    </p>
+
+    <h3>1.2 Project Objectives</h3>
+    <ol>
+      <li>Design and implement a Zero-Trust authentication pipeline using JWT + TOTP MFA.</li>
+      <li>Enforce CIS Benchmark controls (4.1, 5.2, 6.3, 8.1, 9.4) in a deployed application.</li>
+      <li>Build a real-time SIEM console for security event ingestion, parsing, and visualization.</li>
+      <li>Demonstrate OWASP Top 10 mitigations (A01–A07) through live exploit simulators.</li>
+      <li>Design a Cloud VPC architecture following network isolation and Zero-Trust principles.</li>
+      <li>Implement Role-Based Access Control (RBAC) for multi-tier data governance.</li>
+      <li>Enable export of security compliance reports in Excel (CSV) and JSON format.</li>
+    </ol>
+
+    <h3>1.3 Scope &amp; Significance</h3>
+    <p>
+      The project addresses the growing industry demand for security-by-design software development. According to the <em>Verizon 2024 Data Breach Investigations Report</em>, 61% of breaches involve stolen credentials. This project provides a tangible, working demonstration of credential-hardening techniques aligned with industry frameworks such as NIST SP 800-63B, CIS Controls v8, and OWASP Application Security Verification Standard (ASVS) Level 2.
+    </p>
+
+    <div class="note-box">
+      <strong>📌 Key Compliance Standards Addressed:</strong> CIS Benchmarks v8 · OWASP Top 10 (2021) · NIST SP 800-63B · ISO/IEC 27001 (partial) · Cloud Security Alliance (CSA) CCM
+    </div>
+
+    <div class="pg-footer">
+      <span>AuthGuard-MFA | CSE (Cyber Security) — WAS Mini Project</span>
+      <span>Page 2</span>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- PAGE 3 — TECH STACK & ARCHITECTURE                     -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div class="page">
+    <div class="page-header">
+      <div class="chapter">Chapter 2</div>
+      <h2>Technology Stack &amp; System Architecture</h2>
+    </div>
+
+    <h3>2.1 Technology Stack</h3>
+    <table class="data-table">
+      <thead>
+        <tr><th>Layer</th><th>Technology</th><th>Version</th><th>Security Purpose</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Runtime</td><td>Node.js</td><td>v22 LTS</td><td>Non-blocking I/O, secure V8 engine</td></tr>
+        <tr><td>Framework</td><td>Express.js</td><td>4.19.x</td><td>REST API, middleware pipeline</td></tr>
+        <tr><td>Database</td><td>SQLite3</td><td>5.1.x</td><td>Parameterized queries — SQL injection prevention</td></tr>
+        <tr><td>Authentication</td><td>jsonwebtoken</td><td>9.0.x</td><td>HMAC-SHA256 signed JWT, 15-min TTL</td></tr>
+        <tr><td>Password Security</td><td>bcryptjs</td><td>2.4.x</td><td>Adaptive hash, work factor 12</td></tr>
+        <tr><td>MFA / TOTP</td><td>speakeasy</td><td>2.0.x</td><td>RFC 6238 — Time-based OTP</td></tr>
+        <tr><td>QR Code</td><td>qrcode</td><td>1.5.x</td><td>Authenticator app enrollment</td></tr>
+        <tr><td>Security Headers</td><td>helmet</td><td>7.1.x</td><td>CSP, HSTS, X-Frame-Options</td></tr>
+        <tr><td>Rate Limiting</td><td>express-rate-limit</td><td>7.3.x</td><td>DDoS/brute-force mitigation</td></tr>
+        <tr><td>Frontend</td><td>HTML5 / Vanilla JS</td><td>—</td><td>CSP-compatible, no eval()</td></tr>
+        <tr><td>UI Framework</td><td>Custom CSS Glassmorphism</td><td>—</td><td>backdrop-filter, CSS variables</td></tr>
+        <tr><td>Containerization</td><td>Docker (node:alpine)</td><td>—</td><td>Non-root user, minimal attack surface</td></tr>
+      </tbody>
+    </table>
+
+    <h3>2.2 Cloud VPC Architecture</h3>
+    <div class="arch-diagram">
+┌─────────────────────────────────────────────────────────────────┐
+│  INTERNET  ──►  [Client Browser]                                │
+└─────────────────────────────┬───────────────────────────────────┘
+                              │ HTTPS / JWT Bearer Token
+┌─────────────────────────────▼───────────────────────────────────┐
+│  PUBLIC SUBNET (DMZ) — Network ACL: Allow 443/80 inbound only  │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │  AWS Application Load Balancer (ALB) + WAF               │   │
+│  │  ├── TLS 1.3 Termination                                 │   │
+│  │  ├── AWS WAF: SQLi / XSS Rule Groups                     │   │
+│  │  └── express-rate-limit (5 req/min → HTTP 429)           │   │
+│  └──────────────────────────────────────────────────────────┘   │
+└─────────────────────────────┬───────────────────────────────────┘
+                              │ Internal VPC traffic only
+┌─────────────────────────────▼───────────────────────────────────┐
+│  PRIVATE SUBNET — No direct internet access                     │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │  Express.js App Server (Docker: node:alpine, non-root)   │   │
+│  │  ├── Helmet.js   → CSP, HSTS, X-Frame, Referrer-Policy  │   │
+│  │  ├── bcryptjs    → Password Hashing (Work Factor 12)     │   │
+│  │  ├── jsonwebtoken→ JWT HMAC-SHA256 (15-min TTL)          │   │
+│  │  ├── speakeasy   → TOTP RFC-6238 MFA                     │   │
+│  │  └── sqlite3     → Parameterized Queries (No SQLi)       │   │
+│  └──────────────────────────────────────────────────────────┘   │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │  SQLite DB  (No external port — VPC-internal only)       │   │
+│  └──────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────┘
+    </div>
+
+    <h3>2.3 Request Authentication Flow</h3>
+    <p>Every protected route follows this Zero-Trust verification pipeline:</p>
+    <div class="code-block">Client  →  POST /api/auth/login {username, password}
+Server  →  1. Lookup user in SQLite (parameterized query)
+        →  2. bcrypt.compare(password, stored_hash)
+        →  3. If MFA enabled: issue pre-auth token (mfa_verified=false)
+        →  4. Client submits TOTP OTP  →  speakeasy.verify()
+        →  5. Issue full-access JWT (HMAC-SHA256, exp: 15m)
+        →  6. Log AUTH_SUCCESS event to SIEM with IP, timestamp
+Protected API:  JWT middleware verifies signature + expiry on every request</div>
+
+    <div class="pg-footer">
+      <span>AuthGuard-MFA | CSE (Cyber Security) — WAS Mini Project</span>
+      <span>Page 3</span>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- PAGE 4 — SECURITY CONTROLS & CIS COMPLIANCE            -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div class="page">
+    <div class="page-header">
+      <div class="chapter">Chapter 3</div>
+      <h2>Security Controls &amp; CIS / OWASP Compliance</h2>
+    </div>
+
+    <h3>3.1 CIS Benchmark Controls Implementation</h3>
+    <table class="data-table">
+      <thead>
+        <tr><th>CIS Control</th><th>Description</th><th>Implementation</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>CIS 4.1</strong></td>
+          <td>Secure Password Storage</td>
+          <td>bcryptjs — Work Factor 12. Salted adaptive hash. Plain-text never stored.</td>
+          <td class="pass">✓ PASS</td>
+        </tr>
+        <tr>
+          <td><strong>CIS 5.2</strong></td>
+          <td>Multi-Factor Authentication</td>
+          <td>RFC 6238 TOTP via speakeasy. Google Authenticator / Authy compatible QR enrollment.</td>
+          <td class="pass">✓ PASS</td>
+        </tr>
+        <tr>
+          <td><strong>CIS 6.3</strong></td>
+          <td>HTTP Security Headers</td>
+          <td>Helmet.js: Content-Security-Policy, HSTS (max-age=1yr), X-Frame-Options: DENY, Referrer-Policy.</td>
+          <td class="pass">✓ PASS</td>
+        </tr>
+        <tr>
+          <td><strong>CIS 8.1</strong></td>
+          <td>Rate Limiting / DDoS Protection</td>
+          <td>express-rate-limit: 5 req/min on /login and /register. HTTP 429 + SIEM BRUTE_FORCE_SUSPECTED event.</td>
+          <td class="pass">✓ PASS</td>
+        </tr>
+        <tr>
+          <td><strong>CIS 9.4</strong></td>
+          <td>Container Sandboxing</td>
+          <td>Docker image: node:alpine. Runs as non-root user. No unnecessary Linux capabilities.</td>
+          <td class="pass">✓ PASS</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>3.2 OWASP Top 10 (2021) Mitigations</h3>
+    <table class="data-table">
+      <thead>
+        <tr><th>OWASP Risk</th><th>Threat</th><th>Mitigation Implemented</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>A01:2021</strong></td>
+          <td>Broken Access Control</td>
+          <td>JWT middleware on all protected routes. RBAC: Admin / SecOps / Guest tiers. Role verified per request.</td>
+          <td class="pass">✓ Mitigated</td>
+        </tr>
+        <tr>
+          <td><strong>A02:2021</strong></td>
+          <td>Cryptographic Failures</td>
+          <td>bcrypt (no MD5/SHA1 for passwords). JWT signed with HMAC-SHA256. Secrets via environment variables only.</td>
+          <td class="pass">✓ Mitigated</td>
+        </tr>
+        <tr>
+          <td><strong>A03:2021</strong></td>
+          <td>Injection (SQL / XSS)</td>
+          <td>All SQLite queries use parameterized placeholders (?). XSS sanitizer escapes HTML entities on backend.</td>
+          <td class="pass">✓ Mitigated</td>
+        </tr>
+        <tr>
+          <td><strong>A05:2021</strong></td>
+          <td>Security Misconfiguration</td>
+          <td>Helmet.js security headers. .env excluded from git. Docker non-root. No debug logs in production.</td>
+          <td class="pass">✓ Mitigated</td>
+        </tr>
+        <tr>
+          <td><strong>A07:2021</strong></td>
+          <td>Identification &amp; Auth Failures</td>
+          <td>JWT TTL: 15 min. MFA second factor. Rate-limited login. Brute-force detection + SIEM alerting.</td>
+          <td class="pass">✓ Mitigated</td>
+        </tr>
+        <tr>
+          <td><strong>A09:2021</strong></td>
+          <td>Security Logging Failures</td>
+          <td>Structured JSON SIEM logging for every AUTH_SUCCESS, AUTH_FAILED, BRUTE_FORCE event with IP, timestamp.</td>
+          <td class="pass">✓ Mitigated</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>3.3 JWT Cryptographic Security Analysis</h3>
+    <p>The system uses <strong>HMAC-SHA256</strong> (HS256) for JWT signing. The token structure is:</p>
+    <div class="code-block">Header:    { "alg": "HS256", "typ": "JWT" }
+Payload:   { "id": 1, "username": "admin", "mfa_enabled": true,
+             "mfa_verified": true, "iat": 1719558000, "exp": 1719558900 }
+Signature: HMAC-SHA256(base64(header) + "." + base64(payload), JWT_SECRET)</div>
+
+    <div class="warn-box">
+      <strong>⚠️ Key Entropy Requirement (OWASP):</strong> JWT secrets must be a minimum of 256 bits (32+ high-entropy characters). The Cryptographic Key Entropy Auditor built into this project grades any JWT secret on a Shannon Entropy scale from A+ (≥4.5 bits/char) to F (&lt;2.0 bits/char).
+    </div>
+
+    <div class="pg-footer">
+      <span>AuthGuard-MFA | CSE (Cyber Security) — WAS Mini Project</span>
+      <span>Page 4</span>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- PAGE 5 — FEATURES & MODULE DESCRIPTIONS                -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div class="page">
+    <div class="page-header">
+      <div class="chapter">Chapter 4</div>
+      <h2>System Modules &amp; Feature Description</h2>
+    </div>
+
+    <h3>4.1 Authentication &amp; Identity Module</h3>
+    <ul>
+      <li><strong>User Registration:</strong> Collects username, email, and password. Password hashed with bcrypt (WF-12) before insertion into SQLite. Duplicate detection prevents account takeovers.</li>
+      <li><strong>Login — Step 1:</strong> Username/password verified. If MFA disabled, full-access JWT issued immediately. If MFA enabled, a <em>pre-auth</em> JWT (mfa_verified=false) is issued, prompting OTP entry.</li>
+      <li><strong>TOTP MFA — Step 2:</strong> 6-digit RFC 6238 TOTP verified by speakeasy with ±1 step tolerance (30-second windows). On success, a full-access JWT is issued.</li>
+      <li><strong>QR Code Enrollment:</strong> MFA setup page generates a base32 TOTP secret and renders a QR code using the <code>qrcode</code> library compatible with Google Authenticator and Authy.</li>
+      <li><strong>JWT Expiry &amp; Refresh:</strong> All tokens expire in 15 minutes. Dashboard auto-detects expiry and redirects to login — enforcing session security.</li>
+    </ul>
+
+    <h3>4.2 Cloud Console Dashboard</h3>
+    <ul>
+      <li><strong>Welcome Greeting:</strong> Personalized <em>"Welcome back, [username] 👋"</em> with live clock (Good Morning / Afternoon / Evening) based on local time.</li>
+      <li><strong>Metric Stat Cards:</strong> Four KPI cards — Security Status (SECURE), MFA Status (ON ✓ / OFF), CIS Controls Score (5/5), Cloud Platform (AWS).</li>
+      <li><strong>CIS Compliance Auditor:</strong> Five live compliance rows with interactive hover effects. MFA row updates dynamically from JWT claims.</li>
+      <li><strong>JWT Token Decoder:</strong> Live base64-decode of the active token showing Header (red), Payload (cyan), and HMAC-SHA256 Signature (green).</li>
+      <li><strong>Token Tamper Playground:</strong> Edit the active JWT, submit it — the server's HMAC validation returns HTTP 401 Unauthorized, demonstrating tamper-proofing.</li>
+      <li><strong>Entropy Auditor:</strong> Shannon Entropy calculator grades JWT secret key strength from A+ to F with actionable recommendations.</li>
+      <li><strong>Security Report Export:</strong> Downloads a full compliance posture report as <em>.csv</em> (Excel-compatible with UTF-8 BOM) or <em>.json</em>.</li>
+    </ul>
+
+    <h3>4.3 Audit SIEM Console</h3>
+    <ul>
+      <li><strong>Live Security Event Feed:</strong> Polls <code>/api/auth/logs</code> and renders structured JSON events in a terminal-style table with color-coded severity badges (INFO / WARNING / CRITICAL).</li>
+      <li><strong>RBAC Role Selector:</strong> Admin (full logs + hashes), SecOps (redacted hashes), Guest (access denied). Demonstrates principle of least privilege.</li>
+      <li><strong>Brute-Force Simulator:</strong> Fires 10 rapid POST /login requests. Rate limiter triggers HTTP 429. SIEM captures BRUTE_FORCE_SUSPECTED CRITICAL events live.</li>
+      <li><strong>XSS Sanitizer Demo:</strong> Input like <code>&lt;script&gt;alert()&lt;/script&gt;</code> is escaped to HTML entities on the backend — output is safe and non-executable.</li>
+      <li><strong>Session Cookie Auditor:</strong> Proves HttpOnly cookies cannot be accessed via <code>document.cookie</code> in JavaScript — XSS cookie theft mitigation confirmed.</li>
+      <li><strong>Log Ingest &amp; Parse:</strong> Regex-based parser extracts timestamp, event type, IP, and severity from raw log strings. CRITICAL events simulate an AWS SNS alarm payload.</li>
+      <li><strong>SQLite DB Inspector:</strong> Renders the full users table. Passwords are shown as bcrypt hashes (redacted to <code>[REDACTED]</code> in SecOps role).</li>
+      <li><strong>SIEM Export:</strong> Downloads all visible security events to <em>.csv</em> with date, title, and proper column headers.</li>
+    </ul>
+
+    <div class="success-box">
+      <strong>✅ Live Demo Proof of Concept:</strong> All features are functional in the running application at <code>http://localhost:3000</code>. The brute-force simulator, JWT tamper playground, and XSS sanitizer produce real server-side responses visible in the SIEM event log — not simulated client-side fakes.
+    </div>
+
+    <div class="pg-footer">
+      <span>AuthGuard-MFA | CSE (Cyber Security) — WAS Mini Project</span>
+      <span>Page 5</span>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- PAGE 6 — TESTING, RESULTS & CONCLUSION                 -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div class="page">
+    <div class="page-header">
+      <div class="chapter">Chapter 5</div>
+      <h2>Testing, Results &amp; Conclusion</h2>
+    </div>
+
+    <h3>5.1 Security Testing Results</h3>
+    <table class="data-table">
+      <thead>
+        <tr><th>Test Case</th><th>Attack / Scenario</th><th>Expected Result</th><th>Actual Result</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Brute-Force Login</td>
+          <td>10 rapid POST /login requests</td>
+          <td>HTTP 429 after 5th request</td>
+          <td class="pass">✓ HTTP 429 — Rate limited</td>
+        </tr>
+        <tr>
+          <td>Wrong Password</td>
+          <td>Valid username + invalid password</td>
+          <td>HTTP 401 + SIEM AUTH_FAILED</td>
+          <td class="pass">✓ 401 + SIEM event logged</td>
+        </tr>
+        <tr>
+          <td>JWT Tampering</td>
+          <td>Modify payload character in token</td>
+          <td>HTTP 401 — Signature invalid</td>
+          <td class="pass">✓ Server rejects tampered token</td>
+        </tr>
+        <tr>
+          <td>XSS Injection</td>
+          <td>&lt;script&gt;alert('xss')&lt;/script&gt;</td>
+          <td>HTML entities escaped</td>
+          <td class="pass">✓ Output: &amp;lt;script&amp;gt; — safe</td>
+        </tr>
+        <tr>
+          <td>Session Cookie Theft</td>
+          <td>document.cookie in DevTools</td>
+          <td>HttpOnly flag hides token</td>
+          <td class="pass">✓ Cookie not accessible via JS</td>
+        </tr>
+        <tr>
+          <td>MFA Bypass</td>
+          <td>Submit pre-auth token to protected route</td>
+          <td>HTTP 403 — MFA not verified</td>
+          <td class="pass">✓ mfa_verified=false rejected</td>
+        </tr>
+        <tr>
+          <td>SQL Injection</td>
+          <td>" OR 1=1 -- in username field</td>
+          <td>Query fails safely — no data leak</td>
+          <td class="pass">✓ Parameterized query unaffected</td>
+        </tr>
+        <tr>
+          <td>Expired JWT</td>
+          <td>Use token after 15 minutes</td>
+          <td>HTTP 401 — Token expired</td>
+          <td class="pass">✓ Auto-redirect to login</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>5.2 Compliance Summary</h3>
+    <table class="data-table">
+      <thead>
+        <tr><th>Framework</th><th>Controls Addressed</th><th>Score</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>CIS Benchmarks v8</td><td>4.1, 5.2, 6.3, 8.1, 9.4</td><td class="pass">5 / 5 — 100%</td></tr>
+        <tr><td>OWASP Top 10 (2021)</td><td>A01, A02, A03, A05, A07, A09</td><td class="pass">6 / 10 — Addressed</td></tr>
+        <tr><td>NIST SP 800-63B</td><td>MFA, Password Length, Entropy</td><td class="pass">Compliant</td></tr>
+        <tr><td>Zero-Trust Principles</td><td>Verify Explicitly, Least Privilege, Assume Breach</td><td class="pass">Implemented</td></tr>
+      </tbody>
+    </table>
+
+    <h3>5.3 Conclusion</h3>
+    <p>
+      <strong>AuthGuard-MFA</strong> successfully demonstrates a production-ready, security-by-design web application that integrates multiple industry-standard security controls into a cohesive, functional system. The project bridges theoretical knowledge of CIS Benchmarks, OWASP standards, and Zero-Trust Architecture with practical, working implementation.
+    </p>
+    <p>
+      The live SIEM console, exploit simulators, and compliance audit dashboard provide an interactive proof-of-concept for evaluators and stakeholders, making security mechanisms tangible and verifiable rather than theoretical. The glassmorphic, responsive frontend ensures an intuitive interface that rivals industry-grade security dashboards.
+    </p>
+    <p>
+      Future scope includes integration of a Redis-backed persistent rate limiter, OAuth 2.0 / SAML SSO support, real AWS CloudWatch SIEM integration, and container orchestration via Kubernetes with Network Policies for true Zero-Trust microsegmentation.
+    </p>
+
+    <h3>5.4 References</h3>
+    <ol style="font-size: 10pt;">
+      <li>CIS Controls v8 — Center for Internet Security, 2021. <em>https://www.cisecurity.org/controls/</em></li>
+      <li>OWASP Top 10:2021 — Open Web Application Security Project. <em>https://owasp.org/Top10/</em></li>
+      <li>NIST SP 800-63B — Digital Identity Guidelines. <em>https://pages.nist.gov/800-63-3/</em></li>
+      <li>RFC 6238 — TOTP: Time-Based One-Time Password Algorithm. IETF, 2011.</li>
+      <li>Express.js Documentation — <em>https://expressjs.com</em></li>
+      <li>Helmet.js Security Headers — <em>https://helmetjs.github.io</em></li>
+      <li>speakeasy (TOTP) — <em>https://github.com/speakeasyjs/speakeasy</em></li>
+      <li>bcryptjs — <em>https://github.com/dcodeIO/bcrypt.js</em></li>
+      <li>Verizon DBIR 2024 — Data Breach Investigations Report. <em>https://www.verizon.com/business/resources/reports/dbir/</em></li>
+      <li>Cloud Security Alliance — Cloud Controls Matrix (CCM) v4. <em>https://cloudsecurityalliance.org/</em></li>
+    </ol>
+
+    <div class="success-box" style="margin-top: 1.5rem;">
+      <strong>🔗 Project Repository:</strong> https://github.com/PratyushPandey31/WAS-MINI-PROJECT<br>
+      <strong>🛠️ Live Local Demo:</strong> http://localhost:3000 (run: <code>npm install &amp;&amp; npm start</code>)
+    </div>
+
+    <div class="pg-footer">
+      <span>AuthGuard-MFA | CSE (Cyber Security) — WAS Mini Project</span>
+      <span>Page 6</span>
+    </div>
+  </div>
+
+</div><!-- end page-wrapper -->
+
+<script>
+  // Set date dynamically on cover page
+  const d = new Date();
+  const opts = { day: 'numeric', month: 'long', year: 'numeric' };
+  const dateEl = document.getElementById('cover-date');
+  if (dateEl) dateEl.innerText = d.toLocaleDateString('en-IN', opts);
+</script>
+</body>
+</html>
