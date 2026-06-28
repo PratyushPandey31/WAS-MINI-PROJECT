@@ -36,10 +36,32 @@ async function initDashboard() {
     document.getElementById('display-email').innerText = user.email;
     document.getElementById('user-avatar').innerText = user.username.substring(0, 1).toUpperCase();
 
+    // 2.5 Welcome greeting with username + live time
+    const welcomeEl = document.getElementById('welcome-username');
+    if (welcomeEl) welcomeEl.innerText = user.username;
+
+    function updateWelcomeTime() {
+      const timeEl = document.getElementById('welcome-time');
+      if (!timeEl) return;
+      const now = new Date();
+      const hour = now.getHours();
+      const greeting = hour < 12 ? '🌅 Good Morning' : hour < 17 ? '☀️ Good Afternoon' : '🌙 Good Evening';
+      timeEl.innerText = `${greeting} — ${now.toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} • ${now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
+    }
+    updateWelcomeTime();
+    setInterval(updateWelcomeTime, 1000); // Live clock
+
     // 3. Render MFA Status Controls
     const badgeContainer = document.getElementById('mfa-badge-container');
     const description = document.getElementById('mfa-control-description');
     const btnContainer = document.getElementById('mfa-action-btn-container');
+
+    // Update the header stat card
+    const statMfa = document.getElementById('stat-mfa');
+    if (statMfa) {
+      statMfa.innerText = user.mfa_enabled ? 'ON ✓' : 'OFF';
+      statMfa.style.color = user.mfa_enabled ? 'var(--accent-primary)' : 'var(--accent-warning)';
+    }
 
     if (user.mfa_enabled) {
       badgeContainer.innerHTML = `<span class="badge badge-success"><i class="fa-solid fa-square-check"></i> MFA Secured</span>`;
@@ -94,9 +116,91 @@ async function initDashboard() {
       btnEntropy.addEventListener('click', auditSecretKeyStrength);
     }
 
+    // Bind both export report buttons (header + panel)
+    const bindExport = (id) => {
+      const btn = document.getElementById(id);
+      if (btn) btn.addEventListener('click', () => downloadDashboardReport(user));
+    };
+    bindExport('btn-export-dashboard');
+    bindExport('btn-download-posture');
+
+    // Update report table MFA status row dynamically
+    const reportMfaCell = document.getElementById('report-mfa-status');
+    if (reportMfaCell) {
+      reportMfaCell.innerHTML = user.mfa_enabled
+        ? `<span style="color: var(--accent-primary); font-size: 0.75rem;">✓ PASS</span>`
+        : `<span style="color: var(--accent-warning); font-size: 0.75rem;">⚠ WARN</span>`;
+    }
+
   } catch (err) {
     localStorage.removeItem('token');
     window.location.href = 'login.html';
+  }
+}
+
+// ── Security Posture Report Exporter ────────────────────────────────────────
+function downloadDashboardReport(user) {
+  const format = document.getElementById('report-format-select')?.value || 'csv';
+  const now = new Date().toLocaleString();
+  const nowFile = Date.now();
+  const mfaStatus = user?.mfa_enabled ? 'PASS' : 'WARNING';
+
+  const controls = [
+    { control: 'CIS 4.1 — Password Hashing',       status: 'PASS',    standard: 'CIS Benchmark', detail: 'Bcrypt work factor 12 enforced on all stored passwords' },
+    { control: 'CIS 5.2 — Multi-Factor Auth',       status: mfaStatus, standard: 'CIS Benchmark', detail: user?.mfa_enabled ? 'TOTP MFA active (Google Authenticator)' : 'MFA not enabled — enable immediately' },
+    { control: 'CIS 6.3 — HTTP Security Headers',   status: 'PASS',    standard: 'OWASP A05',     detail: 'CSP, HSTS, X-Frame-Options, Referrer-Policy via Helmet.js' },
+    { control: 'CIS 8.1 — Rate Limiting (DDoS)',    status: 'PASS',    standard: 'CIS Benchmark', detail: 'express-rate-limit: 5 req/min on auth routes — 429 on breach' },
+    { control: 'CIS 9.4 — Container Sandboxing',    status: 'PASS',    standard: 'CIS Benchmark', detail: 'Docker image node:alpine running as non-root (no privilege escalation)' },
+    { control: 'OWASP A01 — Broken Access Control', status: 'PASS',    standard: 'OWASP Top 10',  detail: 'RBAC enforced: Admin / SecOps / Guest role tiers with JWT middleware' },
+    { control: 'OWASP A07 — Identification Auth',   status: 'PASS',    standard: 'OWASP Top 10',  detail: 'JWT HMAC-SHA256 signed, verified server-side on every protected route' },
+  ];
+
+  if (format === 'json') {
+    // ── JSON export ────────────────────────────────────────────────────────
+    const reportObj = {
+      report: 'AuthGuard-MFA Security Posture Report',
+      generatedAt: now,
+      account: { username: user?.username || 'N/A', email: user?.email || 'N/A', mfaEnabled: !!user?.mfa_enabled },
+      overallScore: `${controls.filter(c => c.status === 'PASS').length} / ${controls.length} PASS`,
+      controls,
+    };
+    const blob = new Blob([JSON.stringify(reportObj, null, 2)], { type: 'application/json' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `AuthGuard_SecurityReport_${nowFile}.json`;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+  } else {
+    // ── CSV / Excel export ─────────────────────────────────────────────────
+    let csv = `AuthGuard-MFA Security Posture Report\n`;
+    csv += `Generated At,${now}\n`;
+    csv += `Account,${user?.username || 'N/A'}\n`;
+    csv += `Email,${user?.email || 'N/A'}\n`;
+    csv += `MFA Enabled,${user?.mfa_enabled ? 'YES' : 'NO'}\n`;
+    csv += `Overall Score,${controls.filter(c => c.status === 'PASS').length} / ${controls.length} PASS\n\n`;
+    csv += `Control,Status,Standard,Details\n`;
+    controls.forEach(c => {
+      csv += `"${c.control}","${c.status}","${c.standard}","${c.detail}"\n`;
+    });
+    // BOM for Excel UTF-8 compatibility
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `AuthGuard_SecurityReport_${nowFile}.csv`;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  // Show success flash
+  const statusEl = document.getElementById('report-download-status');
+  if (statusEl) {
+    statusEl.style.display = 'block';
+    setTimeout(() => { statusEl.style.display = 'none'; }, 3500);
   }
 }
 

@@ -1,3 +1,7 @@
 node_modules/
-data/authguard.db
+data/
 .env
+*.db
+*.sqlite
+*.log
+seed_user.js
