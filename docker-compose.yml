@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  authguard-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: authguard_mfa_container
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - JWT_SECRET=cloud_prod_secret_token_injected_via_secrets_manager_2026
+    volumes:
+      # Persistent local storage for SQLite database outside container lifecycle
+      - ./data:/usr/src/app/data
+    restart: unless-stopped
+    security_opt:
+      # Prevent container from acquiring new privileges at runtime
+      - no-new-privileges:true

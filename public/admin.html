@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AuthGuard-MFA — SIEM Logs & Database Audit</title>
+  <link rel="stylesheet" href="css/styles.css?v=2">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Chart.js CDN for Glamorous Security Analytics Dashboard -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <!-- File Protocol Warning Banner (Environment Detector) -->
+  <script>
+    if (window.location.protocol === 'file:') {
+      document.write(`
+        <div style="background: linear-gradient(135deg, #ef4444, #ff3366); color: #fff; padding: 1.25rem 1rem; text-align: center; font-weight: bold; font-size: 0.95rem; position: sticky; top: 0; z-index: 99999; box-shadow: 0 4px 15px rgba(255, 51, 102, 0.4); font-family: system-ui, -apple-system, sans-serif;">
+          <i class="fa-solid fa-triangle-exclamation" style="margin-right: 0.5rem; animation: blink 1.5s infinite;"></i> 
+          CRITICAL PROTOCOL WARNING: Running directly via File Protocol (file:/// path). Security triggers, API mocks, database audits, and Excel exports will fail due to CORS. 
+          Please browse this page at the active server origin: 
+          <a href="http://localhost:3000/admin.html" target="_blank" style="color: #fff; text-decoration: underline; font-weight: 800; margin-left: 0.5rem;">http://localhost:3000/admin.html</a>
+        </div>
+      `);
+    }
+  </script>
+
+  <!-- Navigation -->
+  <nav>
+    <div class="logo">
+      <i class="fa-solid fa-shield-halved"></i> AuthGuard-MFA
+    </div>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="login.html">Sign In</a></li>
+      <li><a href="register.html">Register</a></li>
+      <li><a href="dashboard.html">Dashboard</a></li>
+      <li><a href="admin.html" class="active">Audit SIEM</a></li>
+    </ul>
+  </nav>
+
+  <!-- Container -->
+  <div class="container">
+    <!-- Alert Container for displaying warnings and errors -->
+    <div id="alert-container" style="margin-bottom: 1.5rem;"></div>
+    
+    <!-- Page Header -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 1px solid var(--panel-border); padding-bottom: 1.5rem;">
+      <div>
+        <h2><i class="fa-solid fa-terminal"></i> Security Operations Center (SOC)</h2>
+        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.25rem;">
+          Audit logging compliance board and backend database inspector.
+        </p>
+      </div>
+      
+      <div style="display: flex; gap: 0.75rem;">
+        <button class="btn btn-secondary" id="btn-refresh-audit" style="width: auto; padding: 0.5rem 1.25rem;">
+          <i class="fa-solid fa-arrows-rotate"></i> Refresh Audit
+        </button>
+        <button class="btn btn-success" id="btn-export-csv" style="width: auto; padding: 0.5rem 1.25rem; background: linear-gradient(135deg, #10b981, #059669); border: none; box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);">
+          <i class="fa-solid fa-file-excel"></i> Export Report (Excel)
+        </button>
+        <a href="dashboard.html" class="btn btn-primary" style="width: auto; padding: 0.5rem 1.25rem;">
+          <i class="fa-solid fa-chevron-left"></i> Console
+        </a>
+      </div>
+    </div>
+
+    <div id="alert-container"></div>
+
+    <div style="display: flex; flex-direction: column; gap: 3rem;">
+      
+      <!-- Security Operations Center Analytics Visualizer -->
+      <div style="display: grid; grid-template-columns: 1.2fr 1.8fr; gap: 2rem;">
+        
+        <!-- Severity Chart Card -->
+        <div class="glass-panel" style="text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.5rem; min-height: 330px;">
+          <h4 style="color: var(--accent-secondary); margin-bottom: 1rem; width: 100%; text-align: left; font-size: 1.05rem;">
+            <i class="fa-solid fa-circle-nodes"></i> Event Severity Distribution
+          </h4>
+          <div style="width: 100%; max-width: 220px; height: 220px; display: flex; align-items: center; justify-content: center; position: relative;">
+            <canvas id="severityDoughnutChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Threat Metrics Timeline Card -->
+        <div class="glass-panel" style="text-align: center; display: flex; flex-direction: column; padding: 1.5rem; min-height: 330px;">
+          <h4 style="color: var(--accent-primary); margin-bottom: 1rem; width: 100%; text-align: left; font-size: 1.05rem;">
+            <i class="fa-solid fa-wave-square"></i> Real-time Incident Traffic Monitor
+          </h4>
+          <div style="width: 100%; height: 220px; position: relative;">
+            <canvas id="threatTimelineChart"></canvas>
+          </div>
+        </div>
+
+      </div>
+      
+      <!-- Section 1: SIEM Audit Logs -->
+      <div class="glass-panel">
+        <h3 style="color: var(--accent-secondary); margin-bottom: 0.5rem;">
+          <i class="fa-solid fa-chart-line"></i> SIEM Security Event Audit Trail
+        </h3>
+        <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.4;">
+          This log viewer simulates real-time ingestion from standard out streams. In cloud clusters, logs are structured in JSON format to trigger automated alarms for suspected brute-force attacks.
+        </p>
+
+        <!-- RBAC Least Privilege Control Panel -->
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--panel-border); padding: 1rem; border-radius: 8px; margin: 1.25rem 0; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+          <div>
+            <strong style="color: var(--accent-secondary); font-size: 0.85rem; display: block;"><i class="fa-solid fa-user-lock"></i> Least Privilege & RBAC Policy Controller</strong>
+            <span style="font-size: 0.72rem; color: var(--text-secondary);">Enforce role constraints. Guest denies accesses; SecOps redacts Bcrypt hashes and blocks simulations.</span>
+          </div>
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <label for="rbac-role-select" style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0;">Session Role:</label>
+            <select id="rbac-role-select" class="form-control" style="width: auto; padding: 0.25rem 1.75rem 0.25rem 0.75rem; font-size: 0.75rem; background: #111827; color: #fff; border-color: var(--panel-border); cursor: pointer;">
+              <option value="Admin" selected>Administrator (Full Access)</option>
+              <option value="SecOps">SecOps Auditor (Redacted Hashes, No Simulator)</option>
+              <option value="Guest">Guest Account (Access Denied / Redacted Logs)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="siem-table-wrapper">
+          <table class="siem-table">
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Severity</th>
+                <th>Event Type</th>
+                <th>Username</th>
+                <th>IP Address</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody id="siem-logs-tbody">
+              <tr>
+                <td colspan="6" style="text-align: center; padding: 2rem;">Loading security log data...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Section 1.5: Web Application Security (WAS) Auditor & Simulation Playground -->
+      <div class="glass-panel">
+        <h3 style="color: var(--accent-primary); margin-bottom: 0.5rem;">
+          <i class="fa-solid fa-flask-vial"></i> WAS Vulnerability Auditor & Simulator Playground
+        </h3>
+        <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.4; margin-bottom: 1.5rem;">
+          Click the interactive security test suites below to simulate common web application vulnerabilities (OWASP Top 10) and witness active mitigations.
+        </p>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 1rem;">
+          <!-- Column A: Interactive Attack Simulator -->
+          <div style="display: flex; flex-direction: column; gap: 1.5rem; border-right: 1px solid var(--panel-border); padding-right: 2rem;">
+            <h4 style="color: var(--text-primary); font-size: 1.1rem; border-bottom: 1px solid var(--panel-border); padding-bottom: 0.5rem;">
+              <i class="fa-solid fa-bug"></i> Exploit Simulations
+            </h4>
+
+            <!-- Simulation 1: Brute Force rate limiter -->
+            <div>
+              <strong style="display: block; font-size: 0.85rem; color: var(--accent-secondary); margin-bottom: 0.25rem;">1. Brute-Force & Rate Limiting Simulation</strong>
+              <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
+                Fires 10 rapid login attempts to see the <code>express-rate-limit</code> threshold (max 5/min) kick in with a <strong>429 Too Many Requests</strong> status.
+              </p>
+              <button class="btn btn-secondary" id="btn-trigger-brute" style="width: auto; padding: 0.4rem 1rem; font-size: 0.8rem;">
+                Trigger Brute-Force Attack
+              </button>
+            </div>
+
+            <!-- Simulation 2: XSS Sanitizer Input -->
+            <div>
+              <strong style="display: block; font-size: 0.85rem; color: var(--accent-secondary); margin-bottom: 0.25rem;">2. Cross-Site Scripting (XSS) Input Sanitization</strong>
+              <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.5rem;">
+                Submit raw Javascript code below to test server-side sanitization.
+              </p>
+              <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+                <input type="text" id="xss-input" class="form-control" value="&lt;script&gt;alert('exploit')&lt;/script&gt;" style="padding: 0.4rem; font-size: 0.8rem;">
+                <button class="btn btn-primary" id="btn-sanitize-xss" style="width: auto; padding: 0.4rem 1rem; font-size: 0.8rem;">
+                  Sanitize
+                </button>
+              </div>
+              <div id="xss-result" style="font-size: 0.75rem; font-family: monospace; display: none; background: rgba(0,0,0,0.3); padding: 0.5rem; border-radius: 6px; border: 1px solid var(--panel-border);"></div>
+            </div>
+
+            <!-- Simulation 3: Session Security Auditor -->
+            <div>
+              <strong style="display: block; font-size: 0.85rem; color: var(--accent-secondary); margin-bottom: 0.25rem;">3. Session Theft Audit (HttpOnly Cookie check)</strong>
+              <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
+                Tests if JWT session tokens are safe from XSS extraction via <code>document.cookie</code> reading.
+              </p>
+              <button class="btn btn-secondary" id="btn-audit-cookie" style="width: auto; padding: 0.4rem 1rem; font-size: 0.8rem;">
+                Audit Document Cookie
+              </button>
+              <div id="cookie-result" style="font-size: 0.75rem; font-family: monospace; display: none; margin-top: 0.5rem; background: rgba(0,0,0,0.3); padding: 0.5rem; border-radius: 6px; border: 1px solid var(--panel-border);"></div>
+            </div>
+          </div>
+
+          <!-- Column B: Simulation Logs Terminal -->
+          <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <h4 style="color: var(--text-primary); font-size: 1.1rem; border-bottom: 1px solid var(--panel-border); padding-bottom: 0.5rem;">
+              <i class="fa-solid fa-terminal"></i> Simulation Output Terminal
+            </h4>
+            <div id="sim-terminal" style="background: rgba(0,0,0,0.5); flex: 1; border-radius: 12px; border: 1px solid var(--panel-border); padding: 1rem; font-family: monospace; font-size: 0.8rem; overflow-y: auto; max-height: 280px; color: var(--text-primary); line-height: 1.5;">
+              <span style="color: var(--text-secondary);">[system] Sandbox initialized. Ready for attack simulations...</span>
+            </div>
+            <button class="btn btn-secondary" id="btn-clear-terminal" style="align-self: flex-end; width: auto; padding: 0.25rem 0.75rem; font-size: 0.75rem;">
+              Clear Terminal
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- HTTP Response Headers Compliance Auditor -->
+      <div class="glass-panel">
+        <h3 style="color: var(--accent-primary); margin-bottom: 0.5rem;">
+          <i class="fa-solid fa-shield-halved"></i> Active HTTP Response Headers Compliance Auditor
+        </h3>
+        <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.4; margin-bottom: 1.5rem;">
+          These response headers are injected by Helmet.js to mitigate cross-site scripting (XSS), framing, clickjacking, and mime-type sniffing attacks.
+        </p>
+        <div class="siem-table-wrapper" style="margin-top: 0.5rem;">
+          <table class="siem-table">
+            <thead>
+              <tr>
+                <th style="width: 25%;">Header Name</th>
+                <th style="width: 45%;">Configured Compliance Value</th>
+                <th>Defense Mitigation Mapping (OWASP)</th>
+                <th style="width: 12%;">Audited Status</th>
+              </tr>
+            </thead>
+            <tbody id="security-headers-tbody">
+              <tr>
+                <td colspan="4" style="text-align: center;">Loading compliance status...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Threat Intel Architecture & Log Parser Simulation -->
+      <div class="glass-panel">
+        <h3 style="color: var(--accent-secondary); margin-bottom: 1rem;"><i class="fa-solid fa-brain"></i> SIEM Threat Intelligence Architecture</h3>
+        <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem;">
+          Security Information and Event Management (SIEM) systems collect, aggregate, and analyze telemetry data from across your cloud infrastructure. In this application, auth events are written to <code>stdout</code> as structured JSON logs (simulating container log engines). These are processed in real-time to alert security operations teams of active compromises.
+        </p>
+
+        <!-- Flow Chart Visual with Animated Log File Movement -->
+        <div class="log-flow-container" style="position: relative; overflow: hidden; background: rgba(0,0,0,0.3); padding: 2.5rem 1.5rem 1.5rem; border-radius: 12px; border: 1px solid var(--panel-border); margin-bottom: 2rem;">
+          
+          <!-- Animated File Moving across Stages -->
+          <div class="moving-log-file" style="position: absolute; top: 8px; left: 5%; display: flex; flex-direction: column; align-items: center; z-index: 10;">
+            <i class="fa-solid fa-file-invoice" style="color: var(--accent-secondary); font-size: 1.3rem; text-shadow: 0 0 8px var(--accent-secondary);"></i>
+            <span style="font-size: 0.6rem; color: var(--accent-secondary); display: block; font-weight: bold; margin-top: 0.15rem; font-family: monospace;">log_entry.json</span>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; width: 100%; overflow-x: auto;">
+            <!-- Docker Container -->
+            <div style="text-align: center; flex: 1; min-width: 100px; z-index: 5;">
+              <div style="font-size: 1.8rem; color: var(--accent-primary); margin-bottom: 0.5rem;"><i class="fa-solid fa-cube"></i></div>
+              <strong style="font-size: 0.8rem; display: block;">Docker Container</strong>
+              <span style="font-size: 0.65rem; color: var(--text-secondary);">Generates raw log stream</span>
+            </div>
+            <div style="color: var(--text-secondary);"><i class="fa-solid fa-arrow-right-long"></i></div>
+            
+            <!-- JSON Formatter -->
+            <div style="text-align: center; flex: 1; min-width: 100px; z-index: 5;">
+              <div style="font-size: 1.8rem; color: var(--accent-secondary); margin-bottom: 0.5rem;"><i class="fa-solid fa-file-code"></i></div>
+              <strong style="font-size: 0.8rem; display: block;">JSON Formatter</strong>
+              <span style="font-size: 0.65rem; color: var(--text-secondary);">Structures logs: event & IP</span>
+            </div>
+            <div style="color: var(--text-secondary);"><i class="fa-solid fa-arrow-right-long"></i></div>
+            
+            <!-- Cloud Aggregator -->
+            <div style="text-align: center; flex: 1; min-width: 100px; z-index: 5;">
+              <div style="font-size: 1.8rem; color: var(--accent-warning); margin-bottom: 0.5rem;"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+              <strong style="font-size: 0.8rem; display: block;">Cloud Aggregator</strong>
+              <span style="font-size: 0.65rem; color: var(--text-secondary);">Pipes to AWS CloudWatch</span>
+            </div>
+            <div style="color: var(--text-secondary);"><i class="fa-solid fa-arrow-right-long"></i></div>
+            
+            <!-- SIEM Alerting -->
+            <div style="text-align: center; flex: 1; min-width: 100px; z-index: 5;">
+              <div style="font-size: 1.8rem; color: var(--accent-danger); margin-bottom: 0.5rem;"><i class="fa-solid fa-bell"></i></div>
+              <strong style="font-size: 0.8rem; display: block;">SIEM Alerting</strong>
+              <span style="font-size: 0.65rem; color: var(--text-secondary);">Triggers Slack/Email alert</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Log Parser Simulation Playground -->
+        <div style="border-top: 1px solid var(--panel-border); padding-top: 1.5rem;">
+          <h4 style="color: var(--text-primary); font-size: 1.1rem; margin-bottom: 0.75rem;"><i class="fa-solid fa-code"></i> Interactive Log Parser Playground</h4>
+          <p style="color: var(--text-secondary); font-size: 0.8rem; margin-bottom: 1.5rem;">
+            Paste a raw server log message below and trigger the parser. The engine will extract fields, map severity scores, and simulate cloud alert triggers.
+          </p>
+          <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <textarea id="raw-log-input" class="form-control" rows="3" style="font-family: monospace; font-size: 0.85rem;" placeholder="e.g. 2026-06-28T02:07:37Z - authguard-service - AUTH_FAILED - username: victim_user - IP: 192.168.1.45 - details: Invalid password attempts limit hit."></textarea>
+            <button class="btn btn-primary" id="btn-ingest-log" style="width: auto; align-self: flex-start; padding: 0.5rem 1.5rem;">
+              <i class="fa-solid fa-gears"></i> Run Ingest & Parse
+            </button>
+          </div>
+
+          <!-- Parsing Outputs -->
+          <div id="log-parse-result" style="display: none; margin-top: 1.5rem; background: rgba(0,0,0,0.4); padding: 1.5rem; border-radius: 10px; border: 1px solid var(--panel-border); animation: fadeIn 0.3s ease;">
+            <h5 style="margin-bottom: 0.75rem; color: var(--accent-secondary); font-size: 0.95rem;">Parser Output (Ingested Fields)</h5>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+              <div>
+                <span style="font-size: 0.75rem; color: var(--text-secondary); display: block;">Parsed Event Type</span>
+                <code id="parsed-event" style="color: var(--accent-primary); font-size: 0.9rem;">-</code>
+              </div>
+              <div>
+                <span style="font-size: 0.75rem; color: var(--text-secondary); display: block;">Parsed Severity Weight</span>
+                <code id="parsed-severity" style="color: var(--accent-danger); font-size: 0.9rem;">-</code>
+              </div>
+              <div>
+                <span style="font-size: 0.75rem; color: var(--text-secondary); display: block;">Target Username</span>
+                <code id="parsed-user" style="color: var(--text-primary); font-size: 0.9rem;">-</code>
+              </div>
+              <div>
+                <span style="font-size: 0.75rem; color: var(--text-secondary); display: block;">Source IP Address</span>
+                <code id="parsed-ip" style="color: var(--text-primary); font-size: 0.9rem;">-</code>
+              </div>
+            </div>
+            <div id="simulated-sns-alert" style="border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 1rem; margin-top: 1rem;">
+              <!-- SNS Alert details injected here -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: SQLite Database Inspector -->
+      <div class="glass-panel">
+        <h3 style="color: var(--accent-primary); margin-bottom: 0.5rem;">
+          <i class="fa-solid fa-database"></i> SQLite User Table Inspector (Educational)
+        </h3>
+        <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.4;">
+          Demonstrating cryptographic compliance. Notice that the actual password is never stored. Instead, we show the 60-character bcrypt hash representation.
+        </p>
+
+        <div class="users-table-wrapper" style="margin-top: 1.5rem;">
+          <table class="siem-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Email Address</th>
+                <th>Bcrypt Hash (password_hash)</th>
+                <th>MFA</th>
+                <th>Created At</th>
+              </tr>
+            </thead>
+            <tbody id="users-tbody">
+              <tr>
+                <td colspan="6" style="text-align: center; padding: 2rem;">Loading database information...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <p>AuthGuard-MFA &copy; 2026 — Web Application & Cloud Security Capstone.</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/auth.js?v=2"></script>
+  <script src="js/admin.js?v=2"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', initAdminPanel);
+  </script>
+</body>
+</html>

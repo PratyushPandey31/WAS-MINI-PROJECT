@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AuthGuard-MFA — Register</title>
+  <link rel="stylesheet" href="css/styles.css?v=2">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <!-- File Protocol Warning Banner (Environment Detector) -->
+  <script>
+    if (window.location.protocol === 'file:') {
+      document.write(`
+        <div style="background: linear-gradient(135deg, #ef4444, #ff3366); color: #fff; padding: 1.25rem 1rem; text-align: center; font-weight: bold; font-size: 0.95rem; position: sticky; top: 0; z-index: 99999; box-shadow: 0 4px 15px rgba(255, 51, 102, 0.4); font-family: system-ui, -apple-system, sans-serif;">
+          <i class="fa-solid fa-triangle-exclamation" style="margin-right: 0.5rem; animation: blink 1.5s infinite;"></i> 
+          CRITICAL PROTOCOL WARNING: Running directly via File Protocol (file:/// path). Security triggers, API mocks, database audits, and Excel exports will fail due to CORS. 
+          Please browse this page at the active server origin: 
+          <a href="http://localhost:3000/register.html" target="_blank" style="color: #fff; text-decoration: underline; font-weight: 800; margin-left: 0.5rem;">http://localhost:3000/register.html</a>
+        </div>
+      `);
+    }
+  </script>
+
+  <!-- Navigation -->
+  <nav>
+    <div class="logo">
+      <i class="fa-solid fa-shield-halved"></i> AuthGuard-MFA
+    </div>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="login.html">Sign In</a></li>
+      <li><a href="register.html" class="active">Register</a></li>
+      <li><a href="dashboard.html">Dashboard</a></li>
+      <li><a href="admin.html">Audit SIEM</a></li>
+    </ul>
+  </nav>
+
+  <!-- Glassmorphism Blobs -->
+  <div class="bg-blobs">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+
+  <!-- Container -->
+  <div class="container">
+    <div class="glass-panel auth-card">
+      <h2 style="margin-bottom: 0.5rem; font-size: 1.8rem; text-align: center;">Secure Registration</h2>
+      <p style="color: var(--text-secondary); text-align: center; margin-bottom: 2rem; font-size: 0.9rem;">
+        Create your identity to enroll in Multi-Factor authentication.
+      </p>
+
+      <!-- Alert Containers -->
+      <div id="alert-container"></div>
+
+      <form id="register-form">
+        <!-- Username -->
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input type="text" id="username" class="form-control" placeholder="Choose a username" required autocomplete="username">
+        </div>
+
+        <!-- Email -->
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" class="form-control" placeholder="Enter your email" required autocomplete="email">
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" class="form-control" placeholder="Create a strong password" required autocomplete="new-password">
+          
+          <!-- Live Strength Meter -->
+          <div class="strength-container">
+            <div class="strength-bar">
+              <div id="strength-progress" class="strength-progress"></div>
+            </div>
+            <span id="strength-text" class="strength-text">Password Strength: None</span>
+          </div>
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="form-group">
+          <label for="confirm-password">Confirm Password</label>
+          <input type="password" id="confirm-password" class="form-control" placeholder="Verify password" required autocomplete="new-password">
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" id="submit-btn" class="btn btn-primary" style="margin-top: 1rem;">
+          <i class="fa-solid fa-user-plus"></i> Create Account
+        </button>
+      </form>
+
+      <p style="text-align: center; font-size: 0.9rem; margin-top: 1.5rem; color: var(--text-secondary);">
+        Already have an account? <a href="login.html" style="color: var(--accent-primary); text-decoration: none;">Sign In here</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <p>AuthGuard-MFA &copy; 2026 — Web Application & Cloud Security Capstone.</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/auth.js?v=2"></script>
+</body>
+</html>

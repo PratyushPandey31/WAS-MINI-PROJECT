@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AuthGuard-MFA — Cloud Console</title>
+  <link rel="stylesheet" href="css/styles.css?v=2">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <!-- File Protocol Warning Banner (Environment Detector) -->
+  <script>
+    if (window.location.protocol === 'file:') {
+      document.write(`
+        <div style="background: linear-gradient(135deg, #ef4444, #ff3366); color: #fff; padding: 1.25rem 1rem; text-align: center; font-weight: bold; font-size: 0.95rem; position: sticky; top: 0; z-index: 99999; box-shadow: 0 4px 15px rgba(255, 51, 102, 0.4); font-family: system-ui, -apple-system, sans-serif;">
+          <i class="fa-solid fa-triangle-exclamation" style="margin-right: 0.5rem; animation: blink 1.5s infinite;"></i> 
+          CRITICAL PROTOCOL WARNING: Running directly via File Protocol (file:/// path). Security triggers, API mocks, database audits, and Excel exports will fail due to CORS. 
+          Please browse this page at the active server origin: 
+          <a href="http://localhost:3000/dashboard.html" target="_blank" style="color: #fff; text-decoration: underline; font-weight: 800; margin-left: 0.5rem;">http://localhost:3000/dashboard.html</a>
+        </div>
+      `);
+    }
+  </script>
+
+  <!-- Navigation -->
+  <nav>
+    <div class="logo">
+      <i class="fa-solid fa-shield-halved"></i> AuthGuard-MFA
+    </div>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="login.html">Sign In</a></li>
+      <li><a href="register.html">Register</a></li>
+      <li><a href="dashboard.html" class="active">Dashboard</a></li>
+      <li><a href="admin.html">Audit SIEM</a></li>
+    </ul>
+  </nav>  <!-- Container -->
+  <div class="container">
+    <!-- Page Header -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+      <h2><i class="fa-solid fa-gauge-high"></i> Cloud Console Dashboard</h2>
+      <button class="btn btn-secondary" onclick="logout()" style="width: auto; padding: 0.5rem 1.25rem;">
+        <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+      </button>
+    </div>
+    <!-- Alert Container for displaying errors and successes -->
+    <div id="alert-container" style="margin-bottom: 1.5rem;"></div>
+
+    <div class="dashboard-grid">
+      
+      <!-- Left Column: Identity controls & Compliance Checklists -->
+      <div style="display: flex; flex-direction: column; gap: 2rem;">
+        
+        <!-- Profile Card -->
+        <div class="glass-panel" id="panel-profile">
+          <div class="user-profile">
+            <div class="avatar" id="user-avatar">U</div>
+            <div>
+              <h3 id="display-username" style="font-size: 1.5rem; margin-bottom: 0.25rem;">Loading User...</h3>
+              <p id="display-email" style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">email@example.com</p>
+              <div id="mfa-badge-container">
+                <!-- Badges injected dynamically -->
+              </div>
+            </div>
+          </div>
+          
+          <div style="border-top: 1px solid var(--panel-border); padding-top: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+            <h4 style="margin-bottom: 0.25rem;">Identity Security Control</h4>
+            <div id="mfa-control-description" style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4;">
+              Checking account configuration...
+            </div>
+            <div id="mfa-action-btn-container">
+              <!-- Dynamically loaded button -->
+            </div>
+          </div>
+        </div>
+
+        <!-- CIS Compliance Checklist Card -->
+        <div class="glass-panel" id="panel-compliance">
+          <h3 style="color: var(--accent-primary); margin-bottom: 0.5rem;"><i class="fa-solid fa-clipboard-check"></i> CIS Security Compliance Auditor</h3>
+          <p style="color: var(--text-secondary); font-size: 0.8rem; margin-bottom: 1.5rem; line-height: 1.4;">
+            Verifies local deployment controls against CIS Benchmarks and OWASP Top 10 compliance targets.
+          </p>
+
+          <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <!-- Bcrypt Hashing control -->
+            <div class="compliance-item" style="padding: 0.75rem; margin-bottom: 0;">
+              <div>
+                <strong style="display: block; font-size: 0.85rem;">CIS 4.1: Password Hashing</strong>
+                <span style="font-size: 0.7rem; color: var(--text-secondary);">Strict Bcrypt work factor 12 checks active on backend.</span>
+              </div>
+              <span class="badge badge-success" style="background: rgba(0, 255, 204, 0.1); color: var(--accent-primary); border: 1px solid var(--accent-primary); font-size: 0.65rem;"><i class="fa-solid fa-circle-check"></i> Compliant</span>
+            </div>
+
+            <!-- MFA control -->
+            <div class="compliance-item" style="padding: 0.75rem; margin-bottom: 0;">
+              <div>
+                <strong style="display: block; font-size: 0.85rem;">CIS 5.2: Multi-factor Authentication</strong>
+                <span style="font-size: 0.7rem; color: var(--text-secondary);" id="mfa-compliance-desc">Checking status...</span>
+              </div>
+              <span id="mfa-compliance-badge">...</span>
+            </div>
+
+            <!-- Security headers control -->
+            <div class="compliance-item" style="padding: 0.75rem; margin-bottom: 0;">
+              <div>
+                <strong style="display: block; font-size: 0.85rem;">CIS 6.3: HTTP Security Headers</strong>
+                <span style="font-size: 0.7rem; color: var(--text-secondary);">Audits CSP, HSTS, X-Frame-Options configured via Helmet.</span>
+              </div>
+              <span class="badge badge-success" style="background: rgba(0, 255, 204, 0.1); color: var(--accent-primary); border: 1px solid var(--accent-primary); font-size: 0.65rem;"><i class="fa-solid fa-circle-check"></i> Compliant</span>
+            </div>
+
+            <!-- Rate limiting control -->
+            <div class="compliance-item" style="padding: 0.75rem; margin-bottom: 0;">
+              <div>
+                <strong style="display: block; font-size: 0.85rem;">CIS 8.1: Rate Limiting Protection</strong>
+                <span style="font-size: 0.7rem; color: var(--text-secondary);">AuthLimiter active at the ingress points blocks DDoS.</span>
+              </div>
+              <span class="badge badge-success" style="background: rgba(0, 255, 204, 0.1); color: var(--accent-primary); border: 1px solid var(--accent-primary); font-size: 0.65rem;"><i class="fa-solid fa-circle-check"></i> Compliant</span>
+            </div>
+
+            <!-- Docker non-root control -->
+            <div class="compliance-item" style="padding: 0.75rem; margin-bottom: 0;">
+              <div>
+                <strong style="display: block; font-size: 0.85rem;">CIS 9.4: Container Sandboxing</strong>
+                <span style="font-size: 0.7rem; color: var(--text-secondary);">Docker runs as non-root user (node:alpine) to block escapes.</span>
+              </div>
+              <span class="badge badge-success" style="background: rgba(0, 255, 204, 0.1); color: var(--accent-primary); border: 1px solid var(--accent-primary); font-size: 0.65rem;"><i class="fa-solid fa-circle-check"></i> Compliant</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Column: VPC, Decoded Token & Tampering Simulator -->
+      <div style="display: flex; flex-direction: column; gap: 2rem;">
+        
+        <!-- Cloud Deployment VPC Subnet Diagram -->
+        <div class="glass-panel" id="panel-vpc">
+          <h3 style="margin-bottom: 0.5rem;"><i class="fa-solid fa-cloud-arrow-up"></i> Cloud Deployment VPC Architecture</h3>
+          <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1.5rem; line-height: 1.4;">
+            Shows how this service complies with isolation principles of **Cloud & Virtualization Security**.
+          </p>
+
+          <div class="vpc-visualizer">
+            <div class="vpc-box">
+              <div class="vpc-layout">
+                
+                <!-- Public Subnet -->
+                <div class="subnet subnet-public">
+                  <div class="cloud-node">
+                    <span class="node-status status-secured"></span>
+                    <div>
+                      <strong style="display: block; font-size: 0.8rem;">AWS ALB (Load Balancer)</strong>
+                      <span style="font-size: 0.7rem; color: var(--text-secondary);">TLS 1.3 Termination, WAF Enabled</span>
+                    </div>
+                  </div>
+                  <div class="cloud-node">
+                    <span class="node-status status-secured"></span>
+                    <div>
+                      <strong style="display: block; font-size: 0.8rem;">DDoS Rate Limiter</strong>
+                      <span style="font-size: 0.7rem; color: var(--text-secondary);">Blocked 429 Brute-force attacks</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Private Subnet -->
+                <div class="subnet subnet-private">
+                  <div class="cloud-node">
+                    <span class="node-status status-active"></span>
+                    <div>
+                      <strong style="display: block; font-size: 0.8rem;">Express App (Docker)</strong>
+                      <span style="font-size: 0.7rem; color: var(--text-secondary);">Image: node:alpine (non-root)</span>
+                    </div>
+                  </div>
+                  <div class="cloud-node">
+                    <span class="node-status status-active"></span>
+                    <div>
+                      <strong style="display: block; font-size: 0.8rem;">SQLite Database</strong>
+                      <span style="font-size: 0.7rem; color: var(--text-secondary);">Isolated. No external ports.</span>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- External Cloud Integrations -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <!-- Secrets Manager -->
+              <div style="background: rgba(0, 229, 255, 0.05); border: 1px solid rgba(0, 229, 255, 0.2); padding: 1rem; border-radius: 12px;">
+                <h4 style="font-size: 0.9rem; margin-bottom: 0.25rem; color: var(--accent-secondary);"><i class="fa-solid fa-vault"></i> Secret Management</h4>
+                <p style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.3;">
+                  <code>JWT_SECRET</code> is loaded at runtime via environment variables, avoiding static config exposure.
+                </p>
+              </div>
+
+              <!-- SIEM Audit Trail -->
+              <div style="background: rgba(0, 255, 204, 0.05); border: 1px solid rgba(0, 255, 204, 0.2); padding: 1rem; border-radius: 12px;">
+                <h4 style="font-size: 0.9rem; margin-bottom: 0.25rem; color: var(--accent-primary);"><i class="fa-solid fa-list-ul"></i> Cloud Audit Logs</h4>
+                <p style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.3;">
+                  Security events streamed to CloudWatch in JSON. Visit the <a href="admin.html" style="color: var(--accent-primary); text-decoration: underline;">Audit SIEM</a> to inspect events.
+                </p>
+              </div>
+            </div>
+
+            <!-- Interactive Request Telemetry Path -->
+            <div style="margin-top: 1.5rem; background: rgba(0,0,0,0.3); border: 1px solid var(--panel-border); padding: 1rem; border-radius: 12px;">
+              <h4 style="font-size: 0.85rem; color: var(--accent-secondary); margin-bottom: 0.75rem;"><i class="fa-solid fa-network-wired"></i> Live Request Telemetry Flow</h4>
+              <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.75rem; position: relative;">
+                
+                <!-- External Client Node -->
+                <div style="text-align: center; z-index: 5; background: #111827; padding: 0.25rem 0.5rem; border-radius: 6px; border: 1px solid var(--panel-border);">
+                  <i class="fa-solid fa-laptop-code" style="color: var(--text-primary);"></i> Client
+                </div>
+                
+                <!-- Pipeline 1 -->
+                <div class="telemetry-pipe" style="flex: 1; height: 3px; background: rgba(255,255,255,0.05); margin: 0 0.5rem; position: relative; overflow: hidden;">
+                  <div class="telemetry-packet" style="animation-delay: 0s;"></div>
+                </div>
+                
+                <!-- ALB Node -->
+                <div style="text-align: center; z-index: 5; background: #111827; padding: 0.25rem 0.5rem; border-radius: 6px; border: 1px solid var(--accent-secondary);">
+                  <i class="fa-solid fa-server" style="color: var(--accent-secondary);"></i> WAF/ALB
+                </div>
+                
+                <!-- Pipeline 2 -->
+                <div class="telemetry-pipe" style="flex: 1; height: 3px; background: rgba(255,255,255,0.05); margin: 0 0.5rem; position: relative; overflow: hidden;">
+                  <div class="telemetry-packet" style="animation-delay: 0.5s;"></div>
+                </div>
+                
+                <!-- Rate Limiter Node -->
+                <div style="text-align: center; z-index: 5; background: #111827; padding: 0.25rem 0.5rem; border-radius: 6px; border: 1px solid var(--accent-secondary);">
+                  <i class="fa-solid fa-bolt" style="color: var(--accent-secondary);"></i> RateLimit
+                </div>
+                
+                <!-- Pipeline 3 -->
+                <div class="telemetry-pipe" style="flex: 1; height: 3px; background: rgba(255,255,255,0.05); margin: 0 0.5rem; position: relative; overflow: hidden;">
+                  <div class="telemetry-packet" style="animation-delay: 1s;"></div>
+                </div>
+                
+                <!-- App Node -->
+                <div style="text-align: center; z-index: 5; background: #111827; padding: 0.25rem 0.5rem; border-radius: 6px; border: 1px solid var(--accent-primary);">
+                  <i class="fa-solid fa-gears" style="color: var(--accent-primary);"></i> Express API
+                </div>
+                
+                <!-- Pipeline 4 -->
+                <div class="telemetry-pipe" style="flex: 1; height: 3px; background: rgba(255,255,255,0.05); margin: 0 0.5rem; position: relative; overflow: hidden;">
+                  <div class="telemetry-packet" style="animation-delay: 1.5s;"></div>
+                </div>
+                
+                <!-- SQLite Node -->
+                <div style="text-align: center; z-index: 5; background: #111827; padding: 0.25rem 0.5rem; border-radius: 6px; border: 1px solid var(--accent-primary);">
+                  <i class="fa-solid fa-database" style="color: var(--accent-primary);"></i> SQLite
+                </div>
+                
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- JWT Session Token Decoded Card -->
+        <div class="glass-panel" id="panel-jwt">
+          <h3 style="margin-bottom: 1rem;"><i class="fa-solid fa-file-invoice"></i> JWT Session Token Decoded</h3>
+          <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1.5rem; line-height: 1.4;">
+            This token is saved in session storage/cookies. The signature ensures it cannot be tampered with on the client-side.
+          </p>
+
+          <h5 style="color: var(--text-secondary); font-size: 0.75rem; text-transform: uppercase; margin-bottom: 0.5rem; letter-spacing: 0.5px;">JWT Header (Algorithm & Token Type)</h5>
+          <pre class="jwt-visualizer"><span class="jwt-header" id="jwt-header-display">Loading...</span></pre>
+
+          <h5 style="color: var(--text-secondary); font-size: 0.75rem; text-transform: uppercase; margin-top: 1rem; margin-bottom: 0.5rem; letter-spacing: 0.5px;">JWT Payload (User Claims & Session Data)</h5>
+          <pre class="jwt-visualizer"><span class="jwt-payload" id="jwt-payload-display">Loading...</span></pre>
+
+          <h5 style="color: var(--text-secondary); font-size: 0.75rem; text-transform: uppercase; margin-top: 1rem; margin-bottom: 0.5rem; letter-spacing: 0.5px;">HMAC-SHA256 Signature (Verified by Server)</h5>
+          <pre class="jwt-visualizer"><span class="jwt-signature" id="jwt-sig-display">Loading...</span></pre>
+        </div>
+
+        <!-- Token Tampering Playground Card -->
+        <div class="glass-panel" id="panel-tamper">
+          <h4 style="color: var(--accent-danger); margin-bottom: 0.5rem;"><i class="fa-solid fa-triangle-exclamation"></i> Session Tamper-Proof Testing Playground</h4>
+          <p style="color: var(--text-secondary); font-size: 0.8rem; margin-bottom: 1.5rem; line-height: 1.4;">
+            Try to bypass security constraints! Edit your active token string below (e.g., change characters in the middle payload) and test if the server's signature validation blocks your access request.
+          </p>
+          <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <textarea id="tamper-token-input" class="form-control" rows="3" style="font-family: monospace; font-size: 0.8rem; color: var(--accent-danger); border-color: rgba(255, 51, 102, 0.2);"></textarea>
+            <button class="btn btn-danger" id="btn-tamper-token" style="width: auto; align-self: flex-start; padding: 0.5rem 1.5rem;">
+              <i class="fa-solid fa-shield-halved"></i> Inject Tampered Token & Test Status
+            </button>
+          </div>
+          <div id="tamper-result" style="display: none; margin-top: 1.25rem; padding: 1rem; border-radius: 8px; font-family: monospace; font-size: 0.8rem;"></div>
+        </div>
+
+        <!-- JWT Entropy & Key Strength Auditor -->
+        <div class="glass-panel">
+          <h4 style="color: var(--accent-secondary); margin-bottom: 0.5rem;"><i class="fa-solid fa-key"></i> Cryptographic Key Entropy Auditor (OWASP Compliance)</h4>
+          <p style="color: var(--text-secondary); font-size: 0.8rem; margin-bottom: 1.25rem; line-height: 1.4;">
+            OWASP guidelines dictate JWT Secrets should possess a minimum length of 256-bits (32 characters of high-entropy strings). Test key strengths below.
+          </p>
+          <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <div style="display: flex; gap: 0.5rem;">
+              <input type="text" id="jwt-secret-audit-input" class="form-control" placeholder="Type a simulated JWT Secret key..." value="default-development-jwt-secret-key-authguard" style="font-family: monospace; font-size: 0.8rem;">
+              <button class="btn btn-secondary" id="btn-entropy-audit" style="width: auto; font-size: 0.8rem; padding: 0.5rem 1.25rem; white-space: nowrap;">
+                <i class="fa-solid fa-magnifying-glass-chart"></i> Audit Secret
+              </button>
+            </div>
+            
+            <div id="secret-audit-result" style="display: none; padding: 1rem; border-radius: 8px; font-family: monospace; font-size: 0.78rem; line-height: 1.5; background: rgba(255,255,255,0.03); border: 1px solid var(--panel-border);">
+              <!-- Audit results injected here -->
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <p>AuthGuard-MFA &copy; 2026 — Web Application & Cloud Security Capstone.</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/auth.js?v=2"></script>
+  <script src="js/dashboard.js?v=2"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', initDashboard);
+  </script>
+</body>
+</html>

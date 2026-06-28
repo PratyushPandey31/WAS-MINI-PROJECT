@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AuthGuard-MFA — Secure Auth System</title>
+  <link rel="stylesheet" href="css/styles.css?v=2">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Chart.js CDN for Live Security Feed -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <!-- File Protocol Warning Banner (Environment Detector) -->
+  <script>
+    if (window.location.protocol === 'file:') {
+      document.write(`
+        <div style="background: linear-gradient(135deg, #ef4444, #ff3366); color: #fff; padding: 1.25rem 1rem; text-align: center; font-weight: bold; font-size: 0.95rem; position: sticky; top: 0; z-index: 99999; box-shadow: 0 4px 15px rgba(255, 51, 102, 0.4); font-family: system-ui, -apple-system, sans-serif;">
+          <i class="fa-solid fa-triangle-exclamation" style="margin-right: 0.5rem; animation: blink 1.5s infinite;"></i> 
+          CRITICAL PROTOCOL WARNING: Running directly via File Protocol (file:/// path). Security triggers, API mocks, database audits, and Excel exports will fail due to CORS. 
+          Please browse this page at the active server origin: 
+          <a href="http://localhost:3000/index.html" target="_blank" style="color: #fff; text-decoration: underline; font-weight: 800; margin-left: 0.5rem;">http://localhost:3000/index.html</a>
+        </div>
+      `);
+    }
+  </script>
+
+  <!-- Navigation -->
+  <nav>
+    <div class="logo">
+      <i class="fa-solid fa-shield-halved"></i> AuthGuard-MFA
+    </div>
+    <ul class="nav-links">
+      <li><a href="index.html" class="active">Home</a></li>
+      <li><a href="login.html">Sign In</a></li>
+      <li><a href="register.html">Register</a></li>
+      <li><a href="dashboard.html">Dashboard</a></li>
+      <li><a href="admin.html">Audit SIEM</a></li>
+    </ul>
+  </nav>
+
+  <!-- Glassmorphism Blobs -->
+  <div class="bg-blobs">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="container">
+    <header class="hero" style="padding: 3rem 1rem;">
+      <h1 style="font-size: 3.2rem; font-weight: 800; letter-spacing: -1px; margin-bottom: 1rem;">NEXT-GEN ZERO-TRUST IDENTITY PORTAL</h1>
+      <p style="font-size: 1.15rem; color: var(--text-secondary); max-width: 750px; margin: 0 auto 2.5rem; line-height: 1.6;">
+        Shielding cloud identities with military-grade hashing, cryptographic token exchanges, and multi-factor validation. A secure application environment designed for virtualization containment.
+      </p>
+      <div class="hero-actions">
+        <a href="register.html" class="btn btn-primary">Get Started</a>
+        <a href="login.html" class="btn btn-secondary">Access Console</a>
+      </div>
+    </header>
+
+    <!-- Real-time Security Metrics Dashboard Panel -->
+    <div class="glass-panel" style="margin-bottom: 4rem; padding: 2rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--panel-border); padding-bottom: 1rem;">
+        <div>
+          <h2 style="font-size: 1.4rem; color: var(--accent-primary);"><i class="fa-solid fa-earth-americas"></i> Global Threat Prevention Monitor</h2>
+          <p style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 0.25rem;">Live cloud protection traffic metrics and vulnerability mitigation analytics.</p>
+        </div>
+        <span class="badge badge-success" style="background: rgba(0, 255, 204, 0.1); border: 1px solid var(--accent-primary); animation: blink 2.5s infinite; font-size: 0.75rem;"><i class="fa-solid fa-circle" style="font-size: 0.55rem; vertical-align: middle; margin-right: 0.25rem;"></i> LIVE SYSTEM SECURED</span>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1.8fr 1.2fr; gap: 2rem;">
+        <!-- Left: Live authentication traffic line chart -->
+        <div style="min-height: 250px; position: relative;">
+          <h4 style="font-size: 0.9rem; color: var(--text-primary); margin-bottom: 0.75rem;"><i class="fa-solid fa-chart-line"></i> Real-time Authentication Request Flow</h4>
+          <div style="height: 220px;">
+            <canvas id="liveTrafficChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Right: Threat Category Bar Chart -->
+        <div style="min-height: 250px; position: relative;">
+          <h4 style="font-size: 0.9rem; color: var(--text-primary); margin-bottom: 0.75rem;"><i class="fa-solid fa-shield-halved"></i> Blocked Threat Vector Statistics</h4>
+          <div style="height: 220px;">
+            <canvas id="threatStatsChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Security Layers Breakdown -->
+    <section class="features-grid">
+      <div class="glass-panel feature-card">
+        <div class="feature-icon"><i class="fa-solid fa-key"></i></div>
+        <h3 style="color: var(--accent-primary); margin-bottom: 0.5rem;">Bcrypt Password Shield</h3>
+        <span style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 0.75rem; font-weight: 600;">OWASP A02: Cryptographic Failures</span>
+        <p>
+          Passwords undergo irreversible salt-hashing using 12 cryptographic rounds. Eliminates plaintext database exposure and renders offline dictionary attacks mathematically infeasible.
+        </p>
+      </div>
+
+      <div class="glass-panel feature-card">
+        <div class="feature-icon"><i class="fa-solid fa-ticket"></i></div>
+        <h3 style="color: var(--accent-primary); margin-bottom: 0.5rem;">Stateless Session Tokens</h3>
+        <span style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 0.75rem; font-weight: 600;">OWASP A01: Access Control Audit</span>
+        <p>
+          Secures web sessions via signed JSON Web Tokens (JWT) using HMAC-SHA256. Restricts token reading through HttpOnly guidelines to prevent cross-site script (XSS) extraction.
+        </p>
+      </div>
+
+      <div class="glass-panel feature-card">
+        <div class="feature-icon"><i class="fa-solid fa-mobile-screen"></i></div>
+        <h3 style="color: var(--accent-primary); margin-bottom: 0.5rem;">TOTP Multi-Factor Gate</h3>
+        <span style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 0.75rem; font-weight: 600;">OWASP A07: Authentication Security</span>
+        <p>
+          Secondary validation layer requiring rolling 30-second time-based OTP codes (RFC 6238). Google Authenticator integrations block unauthorized logins even during password theft.
+        </p>
+      </div>
+
+      <div class="glass-panel feature-card">
+        <div class="feature-icon"><i class="fa-solid fa-cube"></i></div>
+        <h3 style="color: var(--accent-primary); margin-bottom: 0.5rem;">Containerized Isolation</h3>
+        <span style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 0.75rem; font-weight: 600;">Virtualization Sandbox</span>
+        <p>
+          Fully containerized service using minimal Alpine Linux layers. Configured with a restricted, non-root user account inside the container to prevent privilege breakouts.
+        </p>
+      </div>
+
+      <div class="glass-panel feature-card">
+        <div class="feature-icon"><i class="fa-solid fa-list-check"></i></div>
+        <h3 style="color: var(--accent-primary); margin-bottom: 0.5rem;">SIEM Audit Log Streams</h3>
+        <span style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 0.75rem; font-weight: 600;">Compliance Auditing</span>
+        <p>
+          Generates structured JSON records tracking authorization attempts, rate limits, and enrollment spikes, ready for streaming into cloud auditors like CloudWatch or Splunk.
+        </p>
+      </div>
+
+      <div class="glass-panel feature-card">
+        <div class="feature-icon"><i class="fa-solid fa-bolt"></i></div>
+        <h3 style="color: var(--accent-primary); margin-bottom: 0.5rem;">DDoS Attack Rate Limiter</h3>
+        <span style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 0.75rem; font-weight: 600;">Threat Vector Defense</span>
+        <p>
+          Mitigates brute-force scripts at the network perimeter. Rapid authentication requests automatically trigger temporary IP bans via status code 429 (Too Many Requests).
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <p>AuthGuard-MFA &copy; 2026 — Web Application & Cloud Security Capstone. Open Source MIT License.</p>
+  </footer>
+
+  <!-- Live Simulation Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // 1. Initialize Live Traffic Flow Line Chart
+      const ctxTraffic = document.getElementById('liveTrafficChart').getContext('2d');
+      const timeLabels = ['-18s', '-16s', '-14s', '-12s', '-10s', '-8s', '-6s', '-4s', '-2s', 'Now'];
+      const successData = [12, 15, 14, 18, 16, 12, 14, 15, 17, 19];
+      const blockedData = [1, 0, 2, 0, 1, 0, 3, 1, 0, 1];
+
+      const trafficChart = new Chart(ctxTraffic, {
+        type: 'line',
+        data: {
+          labels: timeLabels,
+          datasets: [
+            {
+              label: 'Successful Requests',
+              data: successData,
+              borderColor: '#00ffcc',
+              backgroundColor: 'rgba(0, 255, 204, 0.04)',
+              borderWidth: 2,
+              fill: true,
+              tension: 0.35,
+              pointRadius: 3
+            },
+            {
+              label: 'Blocked Requests (Attacks)',
+              data: blockedData,
+              borderColor: '#ff3366',
+              backgroundColor: 'rgba(255, 51, 102, 0.04)',
+              borderWidth: 2,
+              fill: true,
+              tension: 0.35,
+              pointRadius: 3
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: { color: '#9ca3af', font: { family: 'Inter', size: 10 } }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(255, 255, 255, 0.03)' },
+              ticks: { color: '#9ca3af', font: { size: 9 } }
+            },
+            y: {
+              grid: { color: 'rgba(255, 255, 255, 0.03)' },
+              ticks: { color: '#9ca3af', font: { size: 9 } }
+            }
+          }
+        }
+      });
+
+      // 2. Initialize Threat Category Bar Chart
+      const ctxThreats = document.getElementById('threatStatsChart').getContext('2d');
+      const threatCounts = [1425, 892, 1102, 540];
+
+      const threatsChart = new Chart(ctxThreats, {
+        type: 'bar',
+        data: {
+          labels: ['Brute Force', 'XSS Injects', 'Session Theft', 'Clickjacking'],
+          datasets: [{
+            data: threatCounts,
+            backgroundColor: [
+              'rgba(255, 170, 0, 0.7)',  // Brute Force - Yellow
+              'rgba(0, 229, 255, 0.7)',  // XSS - Blue
+              'rgba(121, 40, 202, 0.7)', // Session Theft - Purple
+              'rgba(255, 51, 102, 0.7)'  // Clickjacking - Red
+            ],
+            borderColor: [
+              '#ffaa00', '#00e5ff', '#7928ca', '#ff3366'
+            ],
+            borderWidth: 1.5,
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { color: '#9ca3af', font: { size: 10 } }
+            },
+            y: {
+              grid: { color: 'rgba(255, 255, 255, 0.03)' },
+              ticks: { color: '#9ca3af', font: { size: 9 } }
+            }
+          }
+        }
+      });
+
+      // 3. Live Updating Loop (updates graphs every 2 seconds)
+      setInterval(() => {
+        // Shift line chart labels
+        const oldLabel = timeLabels.shift();
+        timeLabels.push(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+
+        // Generate new random mock points
+        const newSuccess = Math.floor(Math.random() * 11) + 10; // 10 to 20
+        // Occasional spike in blocks to show protection activity
+        const newBlocked = Math.random() < 0.15 ? Math.floor(Math.random() * 5) + 3 : Math.floor(Math.random() * 2);
+
+        successData.shift();
+        successData.push(newSuccess);
+
+        blockedData.shift();
+        blockedData.push(newBlocked);
+
+        trafficChart.update();
+
+        // Increment threat stats randomly to show dynamic threat blocking activity
+        const randomIndex = Math.floor(Math.random() * threatCounts.length);
+        threatCounts[randomIndex] += Math.floor(Math.random() * 2) + 1; // Increment by 1 or 2
+        threatsChart.update();
+
+      }, 2000);
+    });
+  </script>
+</body>
+</html>
