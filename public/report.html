@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AuthGuard-MFA — Project Report | CSE (Cyber Security)</title>
   <link href="https://fonts.googleapis.com/css2?family=Times+New+Roman&family=Arial:wght@400;600;700&display=swap" rel="stylesheet">
+  <!-- html2pdf library allowed by helmet CSP -->
+  <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
   <style>
     /* ── Screen UI Styles ─────────────────────────────────────────────── */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -308,9 +310,14 @@
       <h1 style="font-size: 1.25rem;">🔐 AuthGuard-MFA — HOD Academic Report</h1>
       <p>Computer Science Engineering (Cyber Security) • Thakur College of Engineering and Technology</p>
     </div>
-    <button class="btn-print" onclick="window.print()" style="font-size: 1rem; padding: 0.8rem 2.5rem; background: linear-gradient(135deg, #00ffcc, #00e5ff); animation: pulse 2s infinite;">
-      🖨️ Open Print / PDF Dialog
-    </button>
+    <div style="display: flex; gap: 0.75rem;">
+      <button class="btn-print" onclick="downloadDirectPDF()" style="font-size: 1rem; padding: 0.8rem 2rem; background: linear-gradient(135deg, #a855f7, #7928ca); color: #fff; border: 1px solid rgba(168,85,247,0.5);">
+        📥 Direct PDF Download (Instant)
+      </button>
+      <button class="btn-print" onclick="window.print()" style="font-size: 1rem; padding: 0.8rem 2rem; background: linear-gradient(135deg, #00ffcc, #00e5ff); animation: pulse 2s infinite;">
+        🖨️ Open Print Dialog
+      </button>
+    </div>
   </div>
   
   <div style="background: rgba(255,255,255,0.1); border-left: 4px solid #00ffcc; padding: 0.5rem 1rem; border-radius: 4px; font-family: 'Inter', sans-serif; font-size: 0.85rem; color: #fff; display: flex; align-items: center; gap: 0.5rem; justify-content: space-between;">
@@ -823,6 +830,35 @@ Signature: HMAC-SHA256(base64(header) + "." + base64(payload), JWT_SECRET)</div>
   const opts = { day: 'numeric', month: 'long', year: 'numeric' };
   const dateEl = document.getElementById('cover-date');
   if (dateEl) dateEl.innerText = d.toLocaleDateString('en-IN', opts);
+
+  // Direct PDF Download Handler
+  function downloadDirectPDF() {
+    // Show a temporary loading alert or indicator
+    const btn = document.querySelector('button[onclick="downloadDirectPDF()"]');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '⏳ Generating PDF...';
+    btn.disabled = true;
+
+    const element = document.querySelector('.page-wrapper');
+    const opt = {
+      margin:       0,
+      filename:     'AuthGuard_MFA_Project_Report.pdf',
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2, useCORS: true, logging: false },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    // Run html2pdf download
+    html2pdf().set(opt).from(element).save().then(() => {
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+    }).catch(err => {
+      console.error(err);
+      alert('Error generating direct PDF. Please use "Open Print Dialog" ➔ "Save as PDF" instead!');
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+    });
+  }
 </script>
 </body>
 </html>
